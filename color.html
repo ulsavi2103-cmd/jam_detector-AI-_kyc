@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>박스/바이알 정체 감지기 (색상/픽셀 모드)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    #camera-view { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; background: #000; overflow: hidden; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+    canvas { display: none; }
+    #target-box { position: absolute; width: 160px; height: 160px; border: 3px dashed #00ffcc; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px; pointer-events: none; transition: width 0.05s ease, height 0.05s ease; }
+    #target-box.active { border-color: #ffcc00; border-style: solid; background: rgba(255, 204, 0, 0.15); }
+    #target-box.jam { border-color: #ff3b30; border-width: 5px; background: rgba(255, 59, 48, 0.4); }
+    #progress-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+    #progress-fill { width: 0%; height: 100%; background: #00ffcc; }
+    #alarm-banner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.85); display: none; flex-direction: column; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; z-index: 100; text-align: center; animation: flash 0.2s infinite alternate; }
+    @keyframes flash { from { opacity: 0.6; } to { opacity: 1; } }
+    #controls { background: #1c1c1e; padding: 10px 16px; display: flex; flex-direction: column; gap: 5px; border-top: 1px solid #333; }
+    .slider-group { display: flex; flex-direction: column; gap: 5px; }
+    .control-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+    .control-row label { color: #aaa; width: 85px; }
+    .control-row input[type="range"] { flex: 1; margin: 0 10px; }
+    .val-badge { width: 45px; text-align: right; color: #00ffcc; font-weight: bold; }
+    .status-row { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
+    .btn-wrap { display: flex; gap: 8px; margin-top: 2px; }
+    button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; color: #fff; cursor: pointer; }
+    #btn-calib { background: #3a3a3c; }
+    #btn-toggle { background: #007aff; }
+  </style>
+</head>
+<body>
+  <div id="camera-view">
+    <video id="v" playsinline autoplay muted></video>
+    <canvas id="c"></canvas>
+    <div id="target-box">
+      <span style="font-size:11px; color:#00ffcc; font-weight:bold;">색상/픽셀 감시</span>
+      <div id="progress-bar"><div id="progress-fill"></div></div>
+      <span id="txt-timer" style="font-size:13px; font-weight:bold;">0.0s</span>
+    </div>
+    <div id="alarm-banner">🚨 정체 감지!<br><span style="font-size:18px; margin-top:8px;">라인을 즉시 멈추세요</span></div>
+  </div>
+
+  <div id="controls">
+    <div class="slider-group">
+      <div class="control-row">
+        <label>허용 시간</label>
+        <input type="range" id="rng-time" min="0.3" max="3.0" step="0.1" value="1.0">
+        <span class="val-badge" id="txt-limit">1.0s</span>
+      </div>
+      <div class="control-row">
+        <label>감지 민감도</label>
+        <input type="range" id="rng-sens" min="5" max="30" step="1" value="10">
+        <span class="val-badge" id="txt-sens">10</span>
+      </div>
+      <div class="control-row">
+        <label>영역 가로(W)</label>
+        <input type="range" id="rng-w" min="60" max="320" step="10" value="160">
+        <span class="val-badge" id="txt-w">160px</span>
+      </div>
+      <div class="control-row">
+        <label>영역 세로(H)</label>
+        <input type="range" id="rng-h" min="60" max="320" step="10" value="160">
+        <span class="val-badge" id="txt-h">160px</span>
+      </div>
+    </div>
+    <div class="status-row">
+      <span>상태: <b id="txt-status" style="color:#00ffcc;">대기</b></span>
+      <span>픽셀 변화: <b id="txt-diff" style="color:#aaa;">0</b></span>
+    </div>
+    <div class="btn-wrap">
+      <button id="btn-calib">1. 빈 벨트 배경 등록</button>
+      <button id="btn-toggle">2. 감시 시작</button>
+    </div>
+  </div>
+
+  <script>
+    const v = document.getElementById('v'), c = document.getElementById('c'), ctx = c.getContext('2d', { willReadFrequently: true });
+    const targetBox = document.getElementById('target-box'), progressFill = document.getElementById('progress-fill'), txtTimer = document.getElementById('txt-timer');
+    const txtStatus = document.getElementById('txt-status'), txtDiff = document.getElementById('txt-diff'), banner = document.getElementById('alarm-banner');
+    const rngTime = document.getElementById('rng-time'), txtLimit = document.getElementById('txt-limit'), rngSens = document.getElementById('rng-sens'), txtSens = document.getElementById('txt-sens');
+    const rngW = document.getElementById('rng-w'), txtW = document.getElementById('txt-w'), rngH = document.getElementById('rng-h'), txtH = document.getElementById('txt-h');
+    const btnCalib = document.getElementById('btn-calib'), btnToggle = document.getElementById('btn-toggle');
+
+    let audioCtx = null, isRunning = false, limitSec = 1.0, sensitivity = 10, boxW = 160, boxH = 160, staySec = 0, lastTime = 0, wakeLock = null, bgPixels = null;
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } } }).then(s => v.srcObject = s).catch(e => alert("카메라 오류: " + e));
+    async function lockScreen() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} } }
+
+    rngTime.oninput = () => { limitSec = parseFloat(rngTime.value); txtLimit.textContent = limitSec.toFixed(1) + "s"; };
+    rngSens.oninput = () => { sensitivity = parseInt(rngSens.value, 10); txtSens.textContent = sensitivity; };
+    rngW.oninput = () => { boxW = parseInt(rngW.value, 10); txtW.textContent = boxW + "px"; targetBox.style.width = boxW + "px"; invalidateBg(); };
+    rngH.oninput = () => { boxH = parseInt(rngH.value, 10); txtH.textContent = boxH + "px"; targetBox.style.height = boxH + "px"; invalidateBg(); };
+
+    function invalidateBg() { bgPixels = null; txtStatus.textContent = "배경 재등록 필요"; txtStatus.style.color = "#ff3b30"; }
+
+    function getROIPixels() {
+      if (!v.videoWidth || !v.videoHeight) return null;
+      const rw = Math.min(boxW, v.videoWidth), rh = Math.min(boxH, v.videoHeight);
+      const rx = Math.max(0, Math.floor((v.videoWidth - rw) / 2)), ry = Math.max(0, Math.floor((v.videoHeight - rh) / 2));
+      c.width = rw; c.height = rh;
+      ctx.drawImage(v, rx, ry, rw, rh, 0, 0, rw, rh);
+      return ctx.getImageData(0, 0, rw, rh).data;
+    }
+
+    btnCalib.onclick = () => {
+      const cur = getROIPixels(); if (!cur) return;
+      bgPixels = new Uint8ClampedArray(cur);
+      txtStatus.textContent = "대기"; txtStatus.style.color = "#00ffcc";
+      alert("빈 벨트 픽셀 등록 완료!");
+    };
+
+    function calculateDiff(cur) {
+      if (!bgPixels || !cur || bgPixels.length !== cur.length) return 0;
+      let total = 0;
+      for (let i = 0; i < cur.length; i += 4) {
+        total += (Math.abs(cur[i] - bgPixels[i]) + Math.abs(cur[i+1] - bgPixels[i+1]) + Math.abs(cur[i+2] - bgPixels[i+2])) / 3;
+      }
+      return total / (cur.length / 4);
+    }
+
+    function soundAlert() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.8, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+      if ("vibrate" in navigator) navigator.vibrate(150);
+    }
+
+    btnToggle.onclick = () => {
+      if (!bgPixels) { alert("먼저 [1. 빈 벨트 배경 등록]을 눌러주세요."); return; }
+      if (!isRunning) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        lockScreen(); isRunning = true; btnToggle.textContent = "감시 중지"; btnToggle.style.background = "#ff3b30";
+        lastTime = performance.now(); requestAnimationFrame(loop);
+      } else {
+        isRunning = false; btnToggle.textContent = "2. 감시 시작"; btnToggle.style.background = "#007aff"; resetUI();
+      }
+    };
+    function resetUI() { staySec = 0; banner.style.display = 'none'; targetBox.classList.remove('active', 'jam'); progressFill.style.width = '0%'; txtTimer.textContent = '0.0s'; txtStatus.textContent = '대기'; txtStatus.style.color = '#00ffcc'; }
+
+    function loop(now) {
+      if (!isRunning) return;
+      const dt = (now - lastTime) / 1000; lastTime = now;
+      const diff = calculateDiff(getROIPixels());
+      txtDiff.textContent = diff.toFixed(1);
+      const isPresent = diff >= sensitivity;
+      if (isPresent) {
+        staySec += dt; targetBox.classList.add('active'); txtStatus.textContent = "제품 감지 중"; txtStatus.style.color = "#ffcc00";
+        progressFill.style.width = Math.min((staySec / limitSec) * 100, 100) + "%"; txtTimer.textContent = staySec.toFixed(1) + "s";
+        if (staySec >= limitSec) { targetBox.classList.add('jam'); banner.style.display = 'flex'; txtStatus.textContent = "🚨 정체 발생!"; txtStatus.style.color = "#ff3b30"; soundAlert(); }
+      } else {
+        staySec = 0; banner.style.display = 'none'; targetBox.classList.remove('active', 'jam'); progressFill.style.width = '0%'; txtTimer.textContent = '0.0s'; txtStatus.textContent = "정상 통과"; txtStatus.style.color = "#00ffcc";
+      }
+      requestAnimationFrame(loop);
+    }
+  </script>
+</body>
+</html>
