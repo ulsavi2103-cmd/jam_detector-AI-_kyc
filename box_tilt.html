@@ -151,32 +151,9 @@
     }
     .thumb-label { font-size: 9px; color: var(--text-dim); }
 
-    /* 세로모드 회전 안내 배너 */
+    /* 세로모드 회전 안내 배너 숨김 (세로 모드에서도 세로 격자로 완벽 지원) */
     #orientation-hint {
-      display: none;
-      position: absolute;
-      top: 12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(20, 23, 33, 0.94);
-      border: 1.5px solid var(--accent);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.8);
-      backdrop-filter: blur(8px);
-      padding: 7px 14px;
-      border-radius: 18px;
-      z-index: 28;
-      text-align: center;
-      pointer-events: none;
-      animation: floatPrompt 1.2s infinite alternate ease-in-out;
-    }
-    @keyframes floatPrompt {
-      from { transform: translateX(-50%) translateY(0); }
-      to { transform: translateX(-50%) translateY(-4px); }
-    }
-    .hint-title { font-size: 12px; font-weight: 800; color: var(--accent); }
-    .hint-desc { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
-    @media (orientation: portrait) {
-      #orientation-hint { display: block; }
+      display: none !important;
     }
 
     /* 알람 팝업 배너 */
@@ -241,12 +218,12 @@
       flex-wrap: wrap;
     }
     button {
-      flex: 1;
-      min-width: 100px;
-      padding: 10px 8px;
+      flex: 1 1 calc(25% - 6px);
+      min-width: 75px;
+      padding: 9px 6px;
       border: none;
       border-radius: 8px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       color: #fff;
       cursor: pointer;
@@ -254,12 +231,17 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 3px;
     }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
+    #btn-autofit { background: #34c759; }
+    #btn-autofit:hover:not(:disabled) { background: #2fb350; }
+    #btn-toggle-layout { background: #007aff; }
+    #btn-toggle-layout:hover:not(:disabled) { background: #0066d6; }
+    #btn-rotate { background: #48484a; }
     #btn-open-settings { background: #3a3a3c; }
     #btn-sim-mode { background: #2c2f3e; }
-    #btn-sim-mode.active { background: #007aff; }
+    #btn-sim-mode.active { background: #ff9500; }
     #btn-capture-template { background: #2c2f3e; }
     #btn-capture-template:hover:not(:disabled) { background: #3a3e52; }
     #btn-inspect-now { background: #5856d6; }
@@ -439,6 +421,8 @@
     </div>
 
     <div class="btn-row">
+      <button id="btn-autofit" title="현재 화면 크기에 격자를 꽉 차게 맞춥니다">📐 자동맞춤</button>
+      <button id="btn-toggle-layout" title="가로 10x3 또는 세로 3x10 격자로 전환합니다">🔀 격자: 10x3</button>
       <button id="btn-rotate">🔄 회전(0°)</button>
       <button id="btn-open-settings">⚙️ 설정</button>
       <button id="btn-sim-mode">🎮 시뮬레이션</button>
@@ -453,7 +437,10 @@
     <div id="settings-card">
       <div class="modal-head">
         <h2>⚙️ 격자 및 감도 상세 설정</h2>
-        <button class="btn-close-modal" id="btn-close-settings">✕</button>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button id="btn-modal-autofit" style="background:#34c759; padding:4px 8px; font-size:11px; min-width:auto;">📐 화면맞춤</button>
+          <button class="btn-close-modal" id="btn-close-settings">✕</button>
+        </div>
       </div>
 
       <div class="control-grid">
@@ -550,6 +537,9 @@
     const rngGap = document.getElementById('rng-gap'), valGap = document.getElementById('val-gap');
     const rngSampleIdx = document.getElementById('rng-sample-idx'), valSampleIdx = document.getElementById('val-sample-idx');
 
+    const btnAutoFit = document.getElementById('btn-autofit');
+    const btnToggleLayout = document.getElementById('btn-toggle-layout');
+    const btnModalAutoFit = document.getElementById('btn-modal-autofit');
     const btnRotate = document.getElementById('btn-rotate');
     const btnSimMode = document.getElementById('btn-sim-mode');
     const btnCaptureTemplate = document.getElementById('btn-capture-template');
@@ -560,21 +550,101 @@
     const workCanvas = document.createElement('canvas');
     const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
 
-    // 시스템 파라미터 (붉은색 구역 맞춤: 화면 가득 채우는 대형 80x110 셀)
-    const ROWS = 3;
-    const COLS = 10;
+    // 시스템 파라미터 (원터치 자동 맞춤 및 방향 전환 지원)
+    let ROWS = 3;
+    let COLS = 10;
+    let isVerticalGrid = false; // false: 10x3(가로), true: 3x10(세로)
     let gridX = 30, gridY = 40, cellW = 80, cellH = 110, cellGap = 1;
     let matchThreshold = 0.70;
     let stopThreshold = 2.5;
     let sampleCellIndex = 0; // 0-based: 0 ~ 29
     let rotationDegree = 0; // 0, 90, 180, 270
+    let hasUserCustomizedGrid = false;
 
-    // OpenCV 상태 및 템플릿
-    let isOpenCvReady = false;
-    let normalTemplateMat = null; // cv.Mat (Grayscale)
-    let audioCtx = null;
-    let isRunning = false;
-    let isSimulationMode = false;
+    // --- 1-1. 슬라이더 UI 값 동기화 ---
+    function syncSettingsSliders() {
+      rngGridX.value = gridX;
+      valGridX.textContent = gridX + 'px';
+      rngGridY.value = gridY;
+      valGridY.textContent = gridY + 'px';
+      rngCellW.value = cellW;
+      valCellW.textContent = cellW + 'px';
+      rngCellH.value = cellH;
+      valCellH.textContent = cellH + 'px';
+      rngGap.value = cellGap;
+      valGap.textContent = cellGap + 'px';
+      rngSampleIdx.max = ROWS * COLS;
+    }
+
+    // --- 1-2. 원클릭 화면 자동 맞춤 (Auto-Fit) 엔진 ---
+    function autoFitGrid() {
+      const w = overlayCanvas.width || 860;
+      const h = overlayCanvas.height || 500;
+
+      // 뷰포트 내 격자 여백 (화면의 약 88~92%를 꽉 채우도록 계산)
+      const marginX = Math.max(10, Math.floor(w * 0.04));
+      const marginY = Math.max(14, Math.floor(h * 0.05));
+      const availW = Math.max(80, w - marginX * 2);
+      const availH = Math.max(80, h - marginY * 2);
+
+      cellGap = 1; // 셀 간극 1px 밀착
+
+      // 열(COLS) 및 행(ROWS) 수에 맞춰 셀 크기 계산
+      cellW = Math.max(12, Math.floor((availW - (COLS - 1) * cellGap) / COLS));
+      cellH = Math.max(12, Math.floor((availH - (ROWS - 1) * cellGap) / ROWS));
+
+      const totalGridW = COLS * cellW + (COLS - 1) * cellGap;
+      const totalGridH = ROWS * cellH + (ROWS - 1) * cellGap;
+
+      gridX = Math.max(2, Math.floor((w - totalGridW) / 2));
+      gridY = Math.max(2, Math.floor((h - totalGridH) / 2));
+
+      syncSettingsSliders();
+      console.log(`[AutoFit] Layout: ${COLS}x${ROWS}, Cell: ${cellW}x${cellH}, Origin: (${gridX}, ${gridY}) on Canvas ${w}x${h}`);
+    }
+
+    // --- 1-3. 격자 방향 전환 (가로 10x3 ⇄ 세로 3x10) 엔진 ---
+    function toggleGridLayout() {
+      isVerticalGrid = !isVerticalGrid;
+      if (isVerticalGrid) {
+        ROWS = 10;
+        COLS = 3;
+        btnToggleLayout.textContent = '🔀 격자: 3x10(세로)';
+      } else {
+        ROWS = 3;
+        COLS = 10;
+        btnToggleLayout.textContent = '🔀 격자: 10x3(가로)';
+      }
+      if (sampleCellIndex >= ROWS * COLS) {
+        sampleCellIndex = 0;
+      }
+      const r = Math.floor(sampleCellIndex / COLS) + 1;
+      const c = (sampleCellIndex % COLS) + 1;
+      valSampleIdx.textContent = `${sampleCellIndex + 1}번(${r},${c})`;
+
+      // 템플릿 재등록 필요성 안내
+      if (normalTemplateMat) {
+        thumbStatus.textContent = '방향변경 (재등록요망)';
+        thumbStatus.style.color = '#ff9500';
+      }
+
+      autoFitGrid();
+    }
+
+    // 버튼 이벤트 연결
+    btnAutoFit.onclick = () => {
+      hasUserCustomizedGrid = false;
+      autoFitGrid();
+    };
+    if (btnModalAutoFit) {
+      btnModalAutoFit.onclick = () => {
+        hasUserCustomizedGrid = false;
+        autoFitGrid();
+      };
+    }
+    btnToggleLayout.onclick = () => {
+      toggleGridLayout();
+    };
 
     // 회전 버튼 클릭 핸들러 (0 -> 90 -> 180 -> 270)
     btnRotate.onclick = () => {
@@ -582,6 +652,13 @@
       btnRotate.textContent = `🔄 회전(${rotationDegree}°)`;
       updateVideoWrapperLayout();
     };
+
+    // OpenCV 상태 및 템플릿
+    let isOpenCvReady = false;
+    let normalTemplateMat = null; // cv.Mat (Grayscale)
+    let audioCtx = null;
+    let isRunning = false;
+    let isSimulationMode = false;
 
     // 상태 머신: 'IDLE' | 'WAIT_ARRIVAL' | 'CHECK_STOP' | 'INSPECT_ONESHOT' | 'WAIT_DEPARTURE'
     let state = 'IDLE';
@@ -646,11 +723,11 @@
     // --- 4. 슬라이더 이벤트 연동 ---
     rngThreshold.oninput = () => { matchThreshold = parseFloat(rngThreshold.value); valThreshold.textContent = matchThreshold.toFixed(2); };
     rngStopThresh.oninput = () => { stopThreshold = parseFloat(rngStopThresh.value); valStopThresh.textContent = stopThreshold.toFixed(1); };
-    rngGridX.oninput = () => { gridX = parseInt(rngGridX.value, 10); valGridX.textContent = gridX + 'px'; };
-    rngGridY.oninput = () => { gridY = parseInt(rngGridY.value, 10); valGridY.textContent = gridY + 'px'; };
-    rngCellW.oninput = () => { cellW = parseInt(rngCellW.value, 10); valCellW.textContent = cellW + 'px'; };
-    rngCellH.oninput = () => { cellH = parseInt(rngCellH.value, 10); valCellH.textContent = cellH + 'px'; };
-    rngGap.oninput = () => { cellGap = parseInt(rngGap.value, 10); valGap.textContent = cellGap + 'px'; };
+    rngGridX.oninput = () => { hasUserCustomizedGrid = true; gridX = parseInt(rngGridX.value, 10); valGridX.textContent = gridX + 'px'; };
+    rngGridY.oninput = () => { hasUserCustomizedGrid = true; gridY = parseInt(rngGridY.value, 10); valGridY.textContent = gridY + 'px'; };
+    rngCellW.oninput = () => { hasUserCustomizedGrid = true; cellW = parseInt(rngCellW.value, 10); valCellW.textContent = cellW + 'px'; };
+    rngCellH.oninput = () => { hasUserCustomizedGrid = true; cellH = parseInt(rngCellH.value, 10); valCellH.textContent = cellH + 'px'; };
+    rngGap.oninput = () => { hasUserCustomizedGrid = true; cellGap = parseInt(rngGap.value, 10); valGap.textContent = cellGap + 'px'; };
     rngSampleIdx.oninput = () => {
       const idx = parseInt(rngSampleIdx.value, 10);
       sampleCellIndex = idx - 1;
@@ -660,10 +737,33 @@
     };
 
     // --- 5. 뷰포트 레이아웃 1:1 완벽 정합 및 회전 엔진 ---
+    let hasInitializedLayout = false;
+
+    function checkAndApplyInitialLayout(vpW, vpH) {
+      if (!hasInitializedLayout) {
+        hasInitializedLayout = true;
+        if (vpW < vpH) {
+          // 스마트폰 세로 모드: 3열 x 10단 (사용자 스케치 및 세로 뷰포트에 최적화)
+          isVerticalGrid = true;
+          ROWS = 10;
+          COLS = 3;
+          btnToggleLayout.textContent = '🔀 격자: 3x10(세로)';
+        } else {
+          // 가로 모드: 10열 x 3행
+          isVerticalGrid = false;
+          ROWS = 3;
+          COLS = 10;
+          btnToggleLayout.textContent = '🔀 격자: 10x3(가로)';
+        }
+      }
+    }
+
     function updateVideoWrapperLayout() {
       const vpW = viewport.clientWidth;
       const vpH = viewport.clientHeight;
       if (!vpW || !vpH) return;
+
+      checkAndApplyInitialLayout(vpW, vpH);
 
       const vidW = webcam.videoWidth || (isSimulationMode ? 860 : 860);
       const vidH = webcam.videoHeight || (isSimulationMode ? 500 : 500);
@@ -702,6 +802,11 @@
 
       rngGridX.max = Math.max(10, vidW - 100);
       rngGridY.max = Math.max(10, vidH - 80);
+
+      // 사용자가 수동 조작하지 않은 경우 자동으로 화면에 꽉 차도록 그리드 계산
+      if (!hasUserCustomizedGrid) {
+        autoFitGrid();
+      }
     }
 
     function initCamera() {
@@ -766,7 +871,11 @@
         for (let c = 0; c < COLS; c++) {
           const bx = simBoxPosX + c * (cellW + cellGap);
           const by = gridY + r * (cellH + cellGap);
-          const isDefectCell = simHasTiltDefect && ((r === 1 && c === 4) || (r === 2 && c === 7));
+          const defectC1 = Math.min(COLS - 1, isVerticalGrid ? 1 : 4);
+          const defectR1 = Math.min(ROWS - 1, isVerticalGrid ? 4 : 1);
+          const defectC2 = Math.min(COLS - 1, isVerticalGrid ? 2 : 7);
+          const defectR2 = Math.min(ROWS - 1, isVerticalGrid ? 7 : 2);
+          const isDefectCell = simHasTiltDefect && ((r === defectR1 && c === defectC1) || (r === defectR2 && c === defectC2));
 
           if (isDefectCell) {
             simCtx.fillStyle = '#b58900';
