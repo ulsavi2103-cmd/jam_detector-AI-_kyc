@@ -14,6 +14,7 @@
     .mode-btn:active { transform: scale(0.98); }
     .btn-light { background: #007aff; }
     .btn-color { background: #34c759; }
+    .btn-tilt { background: #ff9500; }
     .btn-title { font-size: 17px; font-weight: bold; margin-bottom: 4px; }
     .btn-desc { font-size: 12px; opacity: 0.85; text-align: left; line-height: 1.4; }
   </style>
@@ -31,6 +32,11 @@
     <a href="color.html" class="mode-btn btn-color">
       <span class="btn-title">2. 색상/픽셀 감지 모드</span>
       <span class="btn-desc">파란 벨트 + 파란 캡 등 동일 색상용<br>(테두리 질감 및 RGB 차분 감지)</span>
+    </a>
+
+    <a href="box_tilt.html" class="mode-btn btn-tilt">
+      <span class="btn-title">3. 3x10 박스 전도(누움) 감지 모드</span>
+      <span class="btn-desc">컨베이어 30개 이송 박스 묶음 검사용<br>(OpenCV.js 템플릿 매칭 & 자동 정지 감지)</span>
     </a>
   </div>
 </body>
