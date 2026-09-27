@@ -1,7 +1,7 @@
 {
   "docs/04_qa_evidence/qa_feature1_2_summary.json": {
-    "mtime": 1790496718.5514474,
-    "seen": 1790496763.3155997,
+    "mtime": 1790497350.7246861,
+    "seen": 1790497380.1267254,
     "ast_hash": "680e6a84cce783ca0087fe7042272c81",
     "semantic_hash": ""
   },
@@ -66,39 +66,39 @@
     "semantic_hash": ""
   },
   "color.html": {
-    "mtime": 1790496686.5739777,
-    "seen": 1790496763.3155997,
-    "ast_hash": "2b4e86e682e51fe03707c40a3876f6bd",
+    "mtime": 1790497333.1856642,
+    "seen": 1790497380.1267254,
+    "ast_hash": "dadd90cd7d8b70f42ac5f4111ffcd9fc",
     "semantic_hash": ""
   },
   "docs/01_request_spec.md": {
-    "mtime": 1790496443.477106,
-    "seen": 1790496763.3155997,
-    "ast_hash": "daa24dfd6a54bf3ba98d27f8a926990e",
+    "mtime": 1790497265.6683977,
+    "seen": 1790497380.1267254,
+    "ast_hash": "71a7dc693328642054fcf398d7226d6f",
     "semantic_hash": ""
   },
   "docs/02_todo.md": {
-    "mtime": 1790496757.813991,
-    "seen": 1790496763.3155997,
-    "ast_hash": "ba29582aad34aaae80a1d37934b96ebf",
+    "mtime": 1790497355.9056864,
+    "seen": 1790497380.1267254,
+    "ast_hash": "e22367d5c501479289d1ae3c2c46072f",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate1_review.md": {
-    "mtime": 1790496456.6065235,
-    "seen": 1790496763.3155997,
-    "ast_hash": "314d0a1b73979a01aa75c5d56c32dca4",
+    "mtime": 1790497280.8506088,
+    "seen": 1790497380.1267254,
+    "ast_hash": "94e290ed2882a814e4b67dea3495567c",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate2_review.md": {
-    "mtime": 1790496566.4353309,
-    "seen": 1790496763.3155997,
-    "ast_hash": "964d98cd13cc7256c7e6b8fce788c7f4",
+    "mtime": 1790497365.4898386,
+    "seen": 1790497380.1267254,
+    "ast_hash": "bc262f2cd658acc2d61c48d762d56fd7",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/gate3_qa_report.md": {
-    "mtime": 1790496730.848631,
-    "seen": 1790496763.3155997,
-    "ast_hash": "e5a7a39bc1b1ff379e041d22aa99c308",
+    "mtime": 1790497374.1760235,
+    "seen": 1790497380.1267254,
+    "ast_hash": "7d6a4637ee1abb93be66478d74be822b",
     "semantic_hash": ""
   },
   "index.html": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "light.html": {
-    "mtime": 1790496680.8572779,
-    "seen": 1790496763.3155997,
-    "ast_hash": "233e4ab3cade2b4c27ba00a47c18fb01",
+    "mtime": 1790497311.6515276,
+    "seen": 1790497380.1267254,
+    "ast_hash": "e79c65a8a0585202944b882d6d9114d4",
     "semantic_hash": ""
   },
   "wiki/index.md": {
@@ -132,8 +132,8 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/01_index_landscape_menu.png": {
-    "mtime": 1790496715.7217977,
-    "seen": 1790496763.3155997,
+    "mtime": 1790497347.9288611,
+    "seen": 1790497380.1267254,
     "ast_hash": "d6dcbb79f3ae708cce699a0719c8b246",
     "semantic_hash": ""
   },
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_light_normal_feed.png": {
-    "mtime": 1790496716.9149878,
-    "seen": 1790496763.3155997,
-    "ast_hash": "86a55a61d85dd942624e05d1ce3c219b",
+    "mtime": 1790497349.1065743,
+    "seen": 1790497380.1267254,
+    "ast_hash": "8cd134127f82ca87e720d0bfe6ccdda0",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_warp_point_dragged.png": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_light_defect_alarm.png": {
-    "mtime": 1790496717.0031526,
-    "seen": 1790496763.3155997,
-    "ast_hash": "655540fc0c7382023ca8556fc7aeb13d",
+    "mtime": 1790497349.1906202,
+    "seen": 1790497380.1267254,
+    "ast_hash": "97a177417238e8d7cf339026c1779cb7",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_tilt_defect_alarm.png": {
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/04_color_defect_alarm.png": {
-    "mtime": 1790496718.4867165,
-    "seen": 1790496763.3155997,
-    "ast_hash": "be6033aace89d220c5220268c690489f",
+    "mtime": 1790497350.6720612,
+    "seen": 1790497380.1267254,
+    "ast_hash": "10713d224b8a856bd762cb0f9a7661bc",
     "semantic_hash": ""
   }
 }

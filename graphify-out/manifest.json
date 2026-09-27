@@ -1,7 +1,7 @@
 {
   "docs/04_qa_evidence/qa_feature1_2_summary.json": {
-    "mtime": 1790497350.7246861,
-    "seen": 1790497380.1267254,
+    "mtime": 1790498585.1780748,
+    "seen": 1790498619.5882,
     "ast_hash": "680e6a84cce783ca0087fe7042272c81",
     "semantic_hash": ""
   },
@@ -66,39 +66,39 @@
     "semantic_hash": ""
   },
   "color.html": {
-    "mtime": 1790497333.1856642,
-    "seen": 1790497380.1267254,
-    "ast_hash": "dadd90cd7d8b70f42ac5f4111ffcd9fc",
+    "mtime": 1790498553.3350332,
+    "seen": 1790498619.5882,
+    "ast_hash": "dae3f4c8814b3800ef80e36f48339243",
     "semantic_hash": ""
   },
   "docs/01_request_spec.md": {
-    "mtime": 1790497265.6683977,
-    "seen": 1790497380.1267254,
-    "ast_hash": "71a7dc693328642054fcf398d7226d6f",
+    "mtime": 1790498521.8467007,
+    "seen": 1790498619.5882,
+    "ast_hash": "d581a54a115d2f75027f915014848078",
     "semantic_hash": ""
   },
   "docs/02_todo.md": {
-    "mtime": 1790497355.9056864,
-    "seen": 1790497380.1267254,
-    "ast_hash": "e22367d5c501479289d1ae3c2c46072f",
+    "mtime": 1790498599.3449955,
+    "seen": 1790498619.5882,
+    "ast_hash": "8d349c7be51ebbab6e45a38ad8186383",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate1_review.md": {
-    "mtime": 1790497280.8506088,
-    "seen": 1790497380.1267254,
-    "ast_hash": "94e290ed2882a814e4b67dea3495567c",
+    "mtime": 1790498533.3515637,
+    "seen": 1790498619.5882,
+    "ast_hash": "bcf4d9a20fb475935c0a41c0f9b02434",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate2_review.md": {
-    "mtime": 1790497365.4898386,
-    "seen": 1790497380.1267254,
-    "ast_hash": "bc262f2cd658acc2d61c48d762d56fd7",
+    "mtime": 1790498568.7227213,
+    "seen": 1790498619.5882,
+    "ast_hash": "68e24d241bfd8c1eca907f5d181d7501",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/gate3_qa_report.md": {
-    "mtime": 1790497374.1760235,
-    "seen": 1790497380.1267254,
-    "ast_hash": "7d6a4637ee1abb93be66478d74be822b",
+    "mtime": 1790498594.3197575,
+    "seen": 1790498619.5882,
+    "ast_hash": "db96a609b9d54f3658243da2dcf557a9",
     "semantic_hash": ""
   },
   "index.html": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "light.html": {
-    "mtime": 1790497311.6515276,
-    "seen": 1790497380.1267254,
-    "ast_hash": "e79c65a8a0585202944b882d6d9114d4",
+    "mtime": 1790498546.0746524,
+    "seen": 1790498619.5882,
+    "ast_hash": "92c35adc23144c11b5c219279355c8db",
     "semantic_hash": ""
   },
   "wiki/index.md": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "wiki/landscape_ai_vision_upgrade.md": {
-    "mtime": 1790496744.5227983,
-    "seen": 1790496763.3155997,
-    "ast_hash": "29e167f08ff98161df2c0f8d37f6ab06",
+    "mtime": 1790498612.9667099,
+    "seen": 1790498619.5882,
+    "ast_hash": "8034b784ca7929aabf8dad63933f5588",
     "semantic_hash": ""
   },
   "wiki/perspective_warp_calibration.md": {
@@ -132,8 +132,8 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/01_index_landscape_menu.png": {
-    "mtime": 1790497347.9288611,
-    "seen": 1790497380.1267254,
+    "mtime": 1790498581.8628845,
+    "seen": 1790498619.5882,
     "ast_hash": "d6dcbb79f3ae708cce699a0719c8b246",
     "semantic_hash": ""
   },
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_light_normal_feed.png": {
-    "mtime": 1790497349.1065743,
-    "seen": 1790497380.1267254,
-    "ast_hash": "8cd134127f82ca87e720d0bfe6ccdda0",
+    "mtime": 1790498583.0564225,
+    "seen": 1790498619.5882,
+    "ast_hash": "830bf360f96fde5e2a2d897f22366d37",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_warp_point_dragged.png": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_light_defect_alarm.png": {
-    "mtime": 1790497349.1906202,
-    "seen": 1790497380.1267254,
-    "ast_hash": "97a177417238e8d7cf339026c1779cb7",
+    "mtime": 1790498583.1422348,
+    "seen": 1790498619.5882,
+    "ast_hash": "204f6e15b3a429153427064103c572b8",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_tilt_defect_alarm.png": {
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/04_color_defect_alarm.png": {
-    "mtime": 1790497350.6720612,
-    "seen": 1790497380.1267254,
-    "ast_hash": "10713d224b8a856bd762cb0f9a7661bc",
+    "mtime": 1790498584.6568215,
+    "seen": 1790498619.5882,
+    "ast_hash": "d1a8d6b26f478f8a9d4ba4f7f48c8713",
     "semantic_hash": ""
   }
 }
