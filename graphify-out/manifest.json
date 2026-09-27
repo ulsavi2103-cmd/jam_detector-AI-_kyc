@@ -1,8 +1,8 @@
 {
   "docs/04_qa_evidence/qa_feature1_2_summary.json": {
-    "mtime": 1790501493.3913183,
-    "seen": 1790501555.4984162,
-    "ast_hash": "a6c7cb055837f93730d989e0377c5018",
+    "mtime": 1790502394.4034019,
+    "seen": 1790502453.7362783,
+    "ast_hash": "87b42c4b1568036bcfa6628efa6b8b7a",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/qa_summary.json": {
@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "run_gate3_qa_feature1_2.py": {
-    "mtime": 1790501484.8878481,
-    "seen": 1790501555.4984162,
-    "ast_hash": "65d0b369b133ac728ee71a8c29ad9525",
+    "mtime": 1790502382.5781264,
+    "seen": 1790502453.7362783,
+    "ast_hash": "6ef3f1c0f3036c6af90ea1c4ee021fc3",
     "semantic_hash": ""
   },
   "test_simulation.py": {
@@ -66,21 +66,21 @@
     "semantic_hash": ""
   },
   "color.html": {
-    "mtime": 1790501447.0811875,
-    "seen": 1790501555.4984162,
-    "ast_hash": "d2323b5f5653df39501a5c6b3e65ec28",
+    "mtime": 1790503059.3570383,
+    "seen": 1790503109.8042626,
+    "ast_hash": "03b779c0c88483b3150e4590a64f0279",
     "semantic_hash": ""
   },
   "docs/01_request_spec.md": {
-    "mtime": 1790501189.1941552,
-    "seen": 1790501555.4984162,
-    "ast_hash": "bd646258598814466e61c89cf0e3aadd",
+    "mtime": 1790502084.467244,
+    "seen": 1790502453.7362783,
+    "ast_hash": "6d02c6c544246845a0f7a4bf991bf1e6",
     "semantic_hash": ""
   },
   "docs/02_todo.md": {
-    "mtime": 1790501549.874319,
-    "seen": 1790501555.4984162,
-    "ast_hash": "667f63680a3c35e51fe5de456e459a6f",
+    "mtime": 1790502447.2846463,
+    "seen": 1790502453.7362783,
+    "ast_hash": "106b6eaa45f3de08da379e7a69793a0f",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate1_review.md": {
@@ -90,27 +90,27 @@
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate2_review.md": {
-    "mtime": 1790501509.0973043,
-    "seen": 1790501555.4984162,
-    "ast_hash": "adb0cb9ed2d2c43b6f3d8f1d9e709167",
+    "mtime": 1790502249.9474876,
+    "seen": 1790502453.7362783,
+    "ast_hash": "efdd7d68bab543ae3fd2f0e4490abc35",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/gate3_qa_report.md": {
-    "mtime": 1790501519.8498797,
-    "seen": 1790501555.4984162,
-    "ast_hash": "1b00a852d96036bebc03181901146335",
+    "mtime": 1790502422.231794,
+    "seen": 1790502453.7362783,
+    "ast_hash": "bb890da543acf2616425658f1cd7cc4f",
     "semantic_hash": ""
   },
   "index.html": {
-    "mtime": 1790496470.4264185,
-    "seen": 1790496763.3155997,
-    "ast_hash": "f9ec41f7591cd634c1041ee238e57f32",
+    "mtime": 1790502220.3349843,
+    "seen": 1790502453.7362783,
+    "ast_hash": "4a0cca28d4dee1a4a430b944660bdf7a",
     "semantic_hash": ""
   },
   "light.html": {
-    "mtime": 1790501435.3438368,
-    "seen": 1790501555.4984162,
-    "ast_hash": "8b38d6c8ceef044f7e305f5e5156c9f0",
+    "mtime": 1790503070.54964,
+    "seen": 1790503109.8042626,
+    "ast_hash": "06e569a90e902314edad6fd4431cb0db",
     "semantic_hash": ""
   },
   "wiki/index.md": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "wiki/landscape_ai_vision_upgrade.md": {
-    "mtime": 1790501539.8526988,
-    "seen": 1790501555.4984162,
-    "ast_hash": "29aff563f4966f59477d0310ff47b032",
+    "mtime": 1790502439.7422404,
+    "seen": 1790502453.7362783,
+    "ast_hash": "f54d79ebbfb9c0a2196e625399952b2e",
     "semantic_hash": ""
   },
   "wiki/perspective_warp_calibration.md": {
@@ -132,9 +132,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/01_index_landscape_menu.png": {
-    "mtime": 1790501489.8475475,
-    "seen": 1790501555.4984162,
-    "ast_hash": "d6dcbb79f3ae708cce699a0719c8b246",
+    "mtime": 1790502390.8390944,
+    "seen": 1790502453.7362783,
+    "ast_hash": "cbb3428af59a244a1e9eb78a69d330ef",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/01_warp_grid_initial.png": {
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_light_normal_feed.png": {
-    "mtime": 1790501491.0892959,
-    "seen": 1790501555.4984162,
-    "ast_hash": "d252dfaf7d3087b81a51ca1462ec4bb8",
+    "mtime": 1790502392.097455,
+    "seen": 1790502453.7362783,
+    "ast_hash": "ad97a882ceae1a6ffccc2cf776fde72e",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_warp_point_dragged.png": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_light_defect_alarm.png": {
-    "mtime": 1790501491.3406925,
-    "seen": 1790501555.4984162,
-    "ast_hash": "94c898e98956f12ef8127722c96f56f8",
+    "mtime": 1790502392.3481236,
+    "seen": 1790502453.7362783,
+    "ast_hash": "d831ee0a8a1e6338c4c9e2f5b44e97e3",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_tilt_defect_alarm.png": {
@@ -168,9 +168,45 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/04_color_defect_alarm.png": {
-    "mtime": 1790501493.0078788,
-    "seen": 1790501555.4984162,
-    "ast_hash": "6f991ec73b9d70a390c8e207cc810d21",
+    "mtime": 1790502394.015468,
+    "seen": 1790502453.7362783,
+    "ast_hash": "eca8559ccbda3efa91f2bd87484e7018",
+    "semantic_hash": ""
+  },
+  "docs/04_qa_evidence/qa_viewport_16_9_summary.json": {
+    "mtime": 1790503104.6263041,
+    "seen": 1790503109.8042626,
+    "ast_hash": "4911855fd8675761d53e6ddf2c45a0cc",
+    "semantic_hash": ""
+  },
+  "run_gate3_qa_viewport_16_9.py": {
+    "mtime": 1790503084.5523899,
+    "seen": 1790503109.8042626,
+    "ast_hash": "c90e80a180784c60dd1cf5deab0ab776",
+    "semantic_hash": ""
+  },
+  "docs/04_qa_evidence/qa_color_landscape_16_9.png": {
+    "mtime": 1790503101.5471835,
+    "seen": 1790503109.8042626,
+    "ast_hash": "aa3f28bc9ce1e649941915bf166cf85f",
+    "semantic_hash": ""
+  },
+  "docs/04_qa_evidence/qa_color_portrait_16_9.png": {
+    "mtime": 1790503096.280185,
+    "seen": 1790503109.8042626,
+    "ast_hash": "2de4d707843b007ba4d43771da8390e0",
+    "semantic_hash": ""
+  },
+  "docs/04_qa_evidence/qa_light_landscape_16_9.png": {
+    "mtime": 1790503104.363757,
+    "seen": 1790503109.8042626,
+    "ast_hash": "7458d9a645bdae1882331faf69fcde3e",
+    "semantic_hash": ""
+  },
+  "docs/04_qa_evidence/qa_light_portrait_16_9.png": {
+    "mtime": 1790503098.2438078,
+    "seen": 1790503109.8042626,
+    "ast_hash": "91aef209411fdd9b1b8ee2aadb1ebdfd",
     "semantic_hash": ""
   }
 }

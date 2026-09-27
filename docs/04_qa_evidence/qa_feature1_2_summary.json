@@ -7,8 +7,8 @@
   "color_pipeline_spec": true,
   "color_defect_alarm": true,
   "static_code_checks": {
-    "light_res_640x480": true,
-    "color_res_640x480": true,
+    "light_res_16_9": true,
+    "color_res_16_9": true,
     "light_zero_alloc": true,
     "color_zero_alloc": true,
     "light_debounce_100_400": true,

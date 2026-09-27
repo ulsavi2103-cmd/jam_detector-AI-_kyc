@@ -54,8 +54,8 @@ def verify_static_code():
     color_no_comments = re.sub(r'//.*', '', color_code)
     color_no_comments = re.sub(r'/\*[\s\S]*?\*/', '', color_no_comments)
 
-    checks["light_res_640x480"] = "width: { ideal: 640 }" in light_code and "height: { ideal: 480 }" in light_code
-    checks["color_res_640x480"] = "width: { ideal: 640 }" in color_code and "height: { ideal: 480 }" in color_code
+    checks["light_res_16_9"] = "aspectRatio: { ideal: 1.777777778 }" in light_code and "width: { ideal: 1280" in light_code
+    checks["color_res_16_9"] = "aspectRatio: { ideal: 1.777777778 }" in color_code and "width: { ideal: 1280" in color_code
 
     checks["light_zero_alloc"] = "new Float32Array(1 * 3 * INPUT_SIZE * INPUT_SIZE)" in light_code and light_no_comments.count("new Float32Array") == 1
     checks["color_zero_alloc"] = "new Float32Array(1 * 3 * INPUT_SIZE * INPUT_SIZE)" in color_code and color_no_comments.count("new Float32Array") == 1

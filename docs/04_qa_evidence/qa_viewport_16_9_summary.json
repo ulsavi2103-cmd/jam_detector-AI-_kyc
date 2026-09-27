@@ -1,0 +1,48 @@
+{
+  "static_code_checks": {
+    "light_aspect_ratio_16_9_constraint": true,
+    "color_aspect_ratio_16_9_constraint": true,
+    "light_object_fit_contain": true,
+    "color_object_fit_contain": true,
+    "light_aspect_ratio_css": true,
+    "color_aspect_ratio_css": true,
+    "light_media_query_portrait": true,
+    "color_media_query_portrait": true,
+    "light_rotate_hint_element": true,
+    "color_rotate_hint_element": true,
+    "light_zero_alloc_maintained": true,
+    "color_zero_alloc_maintained": true
+  },
+  "portrait_color": true,
+  "portrait_light": true,
+  "landscape_color": true,
+  "landscape_light": true,
+  "aspect_ratio_accuracy": {
+    "color_portrait": {
+      "flexDirection": "column",
+      "vpWidth": 390,
+      "vpHeight": 219.375,
+      "vpRatio": 1.7777777777777777,
+      "swWidth": 390,
+      "swHeight": 219.375,
+      "swRatio": 1.7777777777777777,
+      "hintVisible": true
+    },
+    "light_portrait": {
+      "flexDirection": "column",
+      "swRatio": 1.7777777777777777,
+      "hintVisible": true
+    },
+    "color_landscape": {
+      "flexDirection": "row",
+      "swRatio": 1.7777777777777777,
+      "alarmFired": true
+    },
+    "light_landscape": {
+      "flexDirection": "row",
+      "swRatio": 1.7777777777777777,
+      "alarmFired": true
+    }
+  },
+  "console_errors": []
+}

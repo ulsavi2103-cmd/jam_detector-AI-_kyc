@@ -1,17 +1,17 @@
 {
-  "0": "test_simulation.py",
-  "1": "inspect_box_posture",
+  "0": "run_gate3_qa_feature1_2.py",
+  "1": "test_simulation.py",
   "2": "[기술 위키] 4포인트 원근 보정(Perspective Warp) 캘리브레이션 및 ROI 설정 자동 저장",
   "3": "MotionStateMachine",
   "4": "Antigravity Production Protocol (초고속 완전 자율 워크플로우 엔진)",
   "5": "2. 세부 기능 요구사항 (Functional Requirements)",
   "6": "작업 체크리스트",
-  "7": "3. 핵심 모듈 및 구현 규격",
+  "7": "컨베이어 16:9 와이드 광범위 AI 비전 파이프라인 아키텍처",
   "8": "📌 [TASK] 1·2번 기능 리팩토링: 단순 정체 감지기 → 가로모드 실시간 AI 자세/전도 검사기 개조",
   "9": "VirtualConveyor",
-  "10": "[Gate 3 QA 리포트] 고속 컨베이어 및 모바일 OOM 방지 통합 QA 보고서 (QA Evaluator)",
+  "10": "[Gate 3 QA 판정 보고서] 16:9 광범위 뷰포트 및 반응형 최적화 자동화 검증",
   "11": "[Gate 1 리뷰] 고속 컨베이어 및 모바일 연속 운용 리팩토링 기획 검토 (Reviewer)",
   "12": "graphify.md",
   "13": "ponytail.md",
-  "14": "[Gate 2 리뷰] 고속 컨베이어 및 모바일 OOM 방지 리팩토링 교차 심사 (Reviewer)"
+  "14": "[Gate 2 교차 검토 보고서] 모바일 16:9 광범위 뷰포트 정상화 및 반응형 최적화"
 }

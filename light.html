@@ -17,13 +17,15 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* === 고정 가로형 레이아웃 (촬영 화면 최대화 + 슬림 우측 제어바) === */
+    /* === 고정 가로형 기본 + 모바일 반응형 16:9 레이아웃 === */
     #app-container {
       display: flex;
+      flex-direction: row;
       width: 100vw;
       height: 100vh;
       position: relative;
       background: #000;
+      overflow: hidden;
     }
 
     #viewport-area {
@@ -37,19 +39,28 @@
       overflow: hidden;
     }
 
+    /* 16:9 와이드 종횡비 고정 래퍼 (가로/세로 모든 환경에서 16:9 비율 유지) */
     #stream-wrapper {
       position: relative;
+      aspect-ratio: 16 / 9;
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-width: calc(100vh * (16 / 9));
+      max-height: 100%;
       background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
     }
 
+    /* object-fit: contain 으로 16:9 광범위 화각 100% 온전 노출 (좌우 잘림/크롭 원천 차단) */
     video, #sim-canvas {
       position: absolute;
       top: 0; left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
       background: #000;
     }
@@ -64,6 +75,67 @@
       z-index: 10;
       touch-action: none;
       cursor: crosshair;
+    }
+
+    /* 모바일 세로 모드(Portrait) 반응형 분기: 상하 분할로 16:9 전폭 뷰포트 보장 */
+    @media (orientation: portrait), (max-aspect-ratio: 1/1), (max-width: 768px) and (orientation: portrait), (max-width: 600px) {
+      #app-container {
+        flex-direction: column !important;
+      }
+
+      #viewport-area {
+        flex: none !important;
+        width: 100vw !important;
+        height: auto !important;
+        aspect-ratio: 16 / 9 !important;
+        max-height: 46vh !important;
+        background: #000;
+      }
+
+      #stream-wrapper {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100vw !important;
+        max-height: calc(100vw * (9 / 16)) !important;
+      }
+
+      #sidebar {
+        flex: 1 !important;
+        width: 100vw !important;
+        height: auto !important;
+        border-left: none !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+        overflow-y: auto !important;
+      }
+
+      .mobile-rotate-hint {
+        display: flex !important;
+      }
+    }
+
+    /* 세로 모드 전용 가로 회전 권장 안내 배지 */
+    .mobile-rotate-hint {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      z-index: 25;
+      background: rgba(0, 0, 0, 0.78);
+      border: 1px solid rgba(0, 210, 255, 0.4);
+      color: #00d2ff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      animation: pulseHint 2s infinite ease-in-out;
+    }
+    @keyframes pulseHint {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.03); }
     }
 
     /* 컨베이어 좌->우 주행 HUD 가이드 */
@@ -304,6 +376,10 @@
           <div id="alarm-title">🚨 불량 자세(전도) 감지!</div>
           <div id="alarm-desc">상자가 가로로 누웠습니다. 즉시 정지하세요!</div>
         </div>
+
+        <div id="rotate-hint" class="mobile-rotate-hint">
+          <span>🔄 가로 회전 시 16:9 와이드 전체화면</span>
+        </div>
       </div>
     </div>
 
@@ -489,18 +565,34 @@
       v.setAttribute('autoplay', '');
       v.setAttribute('muted', '');
 
-      // 1. 카메라 해상도 제한 (스마트폰 FHD/4K 과열 및 다운스케일링 연산 렉 차단: 640x480)
+      // 1. 카메라 16:9 광범위 와이드 해상도 제약 조건 (스마트폰 16:9 와이드 화각 우선 탑재)
       const constraints = {
         video: {
           facingMode: { ideal: "environment" },
-          width: { ideal: 640 },
-          height: { ideal: 480 }
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 360 },
+          aspectRatio: { ideal: 1.777777778 }
         },
         audio: false
       };
 
       const constraintsList = [
         constraints,
+        {
+          audio: false,
+          video: {
+            facingMode: { ideal: "environment" },
+            aspectRatio: { ideal: 16 / 9 }
+          }
+        },
+        {
+          audio: false,
+          video: {
+            facingMode: "environment",
+            width: { ideal: 640 },
+            height: { ideal: 360 }
+          }
+        },
         { audio: false, video: { facingMode: "environment" } },
         { audio: false, video: true }
       ];
