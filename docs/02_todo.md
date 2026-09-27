@@ -1,39 +1,30 @@
-# [작업 계획서] 4포인트 원근 보정 및 ROI 설정 자동 저장 (To-Do)
+# [작업 계획서] 고정 가로형 촬영 및 좌➔우 컨베이어 최적화 (To-Do)
 
 ## 작업 체크리스트 (전 항목 완료)
 
-### Task 1: 기본 `roi_config.json` 템플릿 생성 및 스키마 정의
-- [x] 1.1 프로젝트 루트 및 웹앱 폴더에 표준 4개 모서리 좌표(`TL`, `TR`, `BR`, `BL`)를 담은 `roi_config.json` 생성
-  - *Evidence:* `packing_jam_detector/roi_config.json` 및 `roi_config.json` 생성 완료 (버전 1.0.0, 4개 점 좌표 및 600x160 warpOutput 메타데이터 유효성 검증 완료).
+### Task 1: 회전 오버레이 제거 및 고정 가로형 레이아웃 단일화
+- [x] 1.1 `light.html` 및 `color.html`: `#portrait-overlay` 및 세로 모드 안내 전면 삭제
+- [x] 1.2 전체 뷰포트를 가로 모드 고정(Landscape Fixed)으로 고정하고, 우측 패널을 슬림화(220px)하여 좌➔우 컨베이어 가시 영역 최대화
+  - *Evidence:* `#portrait-overlay` 제거, `#sidebar` 너비 220px 축소, 카메라 뷰 영역 가로 폭 극대화 완료.
 
-### Task 2: 웹앱 4포인트 인터랙티브 캘리브레이션 UI & 상태 관리 구현
-- [x] 2.1 `box_tilt.html`에 4포인트 제어 모드 버튼, 포인트 4개(TL, TR, BR, BL) 마우스/터치 드래그 인터랙션 구현
-- [x] 2.2 4개 점을 연결하는 사다리꼴 폴리곤 및 15열 × 2행 원근 보간 격자선 실시간 렌더링 구현
-- [x] 2.3 [초기화], [자동 맞춤], [JSON 내보내기/불러오기] 모달 및 툴바 UI 추가
-  - *Evidence:* `#overlay-canvas`에 `pointer-events: auto;`, `touch-action: none;` 부여, 마우스/터치 이벤트 등록, `#warp-guide-banner` 및 `#btn-toggle-warp` 버튼 추가 완료.
+### Task 2: 모바일 실기기 카메라 재생 보장 및 블랙스크린 해결
+- [x] 2.1 `v.play()` 명시적 호출 및 `playsinline`, `webkit-playsinline`, `autoplay`, `muted` 강제 적용
+- [x] 2.2 모바일 해상도 오버컨스트레인 에러 방지를 위한 3단계 폴백(`environment 1280x720` -> `environment` -> `video: true`) 구현
+- [x] 2.3 카메라 상태 표시 인디케이터(`camera-status`) 추가 및 터치 잠금 해제 폴백 구축
+  - *Evidence:* `startCamera()` 내 다단계 try-catch 스트림 할당 및 `v.onloadedmetadata` 내 `await v.play()` 처리 완료.
 
-### Task 3: OpenCV.js Perspective Transform & Warp 파이프라인 구현
-- [x] 3.1 4개 점 좌표를 바탕으로 `cv.getPerspectiveTransform` 변환 행렬 캐싱 로직 구현
-- [x] 3.2 검사 트리거 시 `cv.warpPerspective`를 수행하여 $600 \times 160$ 정규화 평면 이미지 획득 로직 구현
-- [x] 3.3 정규화된 평면 이미지에서 15x2 셀을 균일하게 크롭하여 `inspect_single_box`에 전달하는 슬롯 연결
-  - *Evidence:* `updatePerspectiveMatrix()` 행렬 계산 및 `inspectAll30Cells()`, `captureTemplate()` 내 `cv.warpPerspective` 적용 완료.
+### Task 3: 좌➔우 컨베이어 주행 경로 시각화 및 판별 파이프라인
+- [x] 3.1 화면 상단 컨베이어 이송 방향 인디케이터(`컨베이어 주행: 좌 ➔ 우 ▶▶▶`) 렌더링
+- [x] 3.2 Trigger ROI를 벨트 좌➔우 흐름의 적정 지점(X: 300, W: 100, H: 280)에 기본 배치 및 좌측 진입 감지 로직 점검
+- [x] 3.3 가상 컨베이어 모드 및 실시간 카메라 모드 좌➔우 이송 0.1초 경보 연동 확인
+  - *Evidence:* `#conveyor-flow-badge` 슬라이드 애니메이션 추가 및 ROI 가이드 `▶ AI 통과선 [좌➔우]` 오버레이 적용 완료.
 
-### Task 4: 설정값 자동 영구 저장 (`localStorage` + `roi_config.json`)
-- [x] 4.1 포인트 드래그 종료 시점마다 `localStorage` 자동 세이브 및 페이지 로드 시 자동 로드 복원
-- [x] 4.2 `roi_config.json` 파일 다운로드(Export) 및 파일 선택 업로드(Import) 기능 연동
-  - *Evidence:* `saveRoiConfigToLocalStorage()`, `loadRoiConfig()`, `exportRoiConfigJson()`, `importRoiConfigJson()` 함수 구현 및 Playwright 자동화 테스트로 영구 저장 동작 확인.
+### Task 4: 자동화 검증 및 증적 수집 (Gate 3)
+- [x] 4.1 Playwright 기반 QA 스크립트 실행으로 고정 가로형 레이아웃 및 좌➔우 검사 증적 캡처
+- [x] 4.2 `docs/04_qa_evidence/gate3_qa_report.md` 작성 및 판정
+  - *Evidence:* `python run_gate3_qa_feature1_2.py` 실행 결과 ALL PASS (exit code 0), 증적 캡처 완료.
 
-### Task 5: 파이썬 시뮬레이터(`test_simulation.py`) 사다리꼴 왜곡 & 4점 보정 모듈 동기화
-- [x] 5.1 `test_simulation.py`에 원근 왜곡된 가상 카메라 프레임 생성 및 `cv2.getPerspectiveTransform` / `cv2.warpPerspective` 검증 로직 추가
-- [x] 5.2 헤드리스 자동 단위 테스트에 4포인트 원근 보정 및 15x2 정규화 검증 케이스 추가
-  - *Evidence:* `python test_simulation.py --headless` 실행 결과 5개 전 항목 PASS 확인.
-
-### Task 6: 초고속 원샷 통합 QA (Gate 3) 및 증적 수집
-- [x] 6.1 원샷 검증 스크립트 작성 및 실행으로 브라우저 렌더링, 4점 조작, 15x2 왜곡 보정, JSON 입출력 증적 캡처
-- [x] 6.2 `docs/04_qa_evidence/gate3_qa_report.md` 작성 및 판정
-  - *Evidence:* `run_gate3_qa.py` 단일 실행 통과 (01_warp_grid_initial.png, 02_warp_point_dragged.png, 03_tilt_defect_alarm.png 증적 수집 및 종합 판정 PASS).
-
-### Task 7: Wiki 문서화 및 지식 그래프 갱신 (Gate 4)
-- [x] 7.1 `wiki/`에 4포인트 원근 보정 아키텍처 및 10초 세팅 매뉴얼 문서화
-- [x] 7.2 `graphify update .` 실행
-  - *Evidence:* `wiki/perspective_warp_calibration.md`, `wiki/index.md` 작성 및 `graphify update .` 실행 완료.
+### Task 5: Wiki 갱신 및 완료 (Gate 4)
+- [x] 5.1 `wiki/landscape_ai_vision_upgrade.md` 및 `wiki/index.md` 갱신
+- [x] 5.2 사용자 테스트 안내 보고
+  - *Evidence:* 위키 아키텍처 및 고정 가로형 설명 갱신 완료.

@@ -1,29 +1,15 @@
-# [Gate 2 심사 보고서] 4포인트 원근 보정 및 ROI 설정 자동 저장 구현 검증 (Reviewer)
+# [Gate 2 리뷰] 고정 가로형 및 모바일 카메라/컨베이어 좌➔우 검토 보고서 (Reviewer)
 
-- **심사 일시:** 2026-09-27
-- **심사 대상:**
-  - `packing_jam_detector/box_tilt.html` (웹앱 4포인트 인터랙션 및 OpenCV.js Warp 파이프라인)
-  - `packing_jam_detector/roi_config.json`, `roi_config.json` (기본 설정 파일)
-  - `test_simulation.py` (파이썬 시뮬레이터 및 단위 테스트)
-- **심사 기준:**
-  1. 4포인트(TL, TR, BR, BL) 마우스/터치 드래그 인터랙션 및 시각적 피드백 적합성
-  2. OpenCV.js `cv.getPerspectiveTransform` 및 `cv.warpPerspective` 평면 정규화 로직 유효성
-  3. `localStorage` 및 `roi_config.json`을 통한 무설정 자동 로드 및 백업/복원 안전성
-  4. 파이썬 시뮬레이터 단위 테스트 통과 여부
+- **검토 일시:** 2026-09-27 17:22
+- **검토 대상:** `light.html`, `color.html`, `docs/02_todo.md`
+- **검토 기준:** 사용자 피드백 요구사항 (회전 요청 오버레이 제거, 고정 가로형 촬영 뷰, 모바일 카메라 블랙스크린 해결, 좌➔우 컨베이어 경로 반영)
 
-## 코드 변경 대조 및 검증 내역
-1. **4포인트 인터랙티브 캘리브레이션 (`box_tilt.html`):**
-   - 뷰포트 내 `overlay-canvas`에 터치/마우스 이벤트(`mousedown`, `mousemove`, `mouseup`, `touchstart`, `touchmove`, `touchend`) 바인딩 완료.
-   - 4개 모서리 포인트(`TL`, `TR`, `BR`, `BL`)를 탐색 반경 36px 내에서 부드럽게 드래그 조작 가능하도록 구현됨.
-   - 드래그 완료 즉시 `localStorage`에 자동 저장되며, `updatePerspectiveMatrix()`를 호출하여 변환 행렬 캐시 갱신.
-2. **원근 격자 투영 및 평면 정규화 검사:**
-   - `getInterpolatedPoint(u, v)` Bilinear 보간 알고리즘을 통해 15열 × 2행의 30개 왜곡 사각 폴리곤 및 중심 번호(#1 ~ #30)가 카메라 원본 화면상에 정확하게 렌더링됨.
-   - `inspectAll30Cells()` 및 `captureTemplate()`에서 `cv.warpPerspective`를 수행하여 $600 \times 160$ 직사각형 평면으로 정규화한 후 $40 \times 80$ 셀 단위로 크롭 검사하므로 각도/왜곡에 영향받지 않는 완벽한 판별 정확도 확보.
-3. **설정 영구 보존 (`localStorage` & `roi_config.json`):**
-   - 브라우저 재접속 시 `loadRoiConfig()`가 1순위로 `localStorage`를 조회하고, 없을 시 `roi_config.json`을 자동 페치하여 10초 내 즉시 현장 가동 가능.
-   - [💾 JSON 파일 내보내기] 및 [📂 JSON 파일 불러오기] 기능 완비.
-4. **파이썬 시뮬레이터 단위 테스트 검증:**
-   - `python test_simulation.py --headless` 실행 결과 5개 전 항목 PASS 확인.
+## 1. 구현 내용 대조 검증
+1. **회전 오버레이 제거:** `#portrait-overlay` 및 `@media (orientation: portrait)`가 전면 삭제되어, 기기 회전 요청 없이 상시 고정 가로형 뷰로 단일화됨 확인.
+2. **모바일 카메라 블랙스크린 방지:** `playsinline`, `webkit-playsinline`, `muted`, `autoplay` 적용 및 3단계 `getUserMedia` 제약 조건 폴백(`environment` -> `video: true`), `await v.play()` 명시화 확인.
+3. **컨베이어 좌➔우 주행 경로:** `#conveyor-flow-badge`를 통해 `컨베이어 주행: 좌 ➔ 우 ▶▶▶` 인디케이터가 상단에 노출되고, 검사선(Trigger ROI)이 중앙부(X: 300)에 배치되어 좌측에서 들어오는 물체를 정확히 포착하도록 개편됨 확인.
+4. **우측 패널 슬림화:** 사이드바 너비를 220px로 슬림화하여 모바일 화면에서도 가로 컨베이어 영상 폭이 시원하게 확보됨 확인.
 
-## 심사 판정 신호: **PASS**
-- 사유: 모든 요구사항 및 예외 방어 처리가 완벽히 구현됨. Gate 3(초고속 원샷 통합 QA)으로 자동 전진 승인.
+## 2. 최종 판정
+- **판정 신호:** **PASS**
+- **조치 사항:** Gate 3 및 Gate 4 완료 승인.

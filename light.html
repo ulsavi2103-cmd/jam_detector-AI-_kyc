@@ -2,145 +2,843 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>박스 걸림 감지기 (밝기 모드)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <title>컨베이어 AI 자세/전도 검사기 (밝기 모드)</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: #fff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    #camera-view { position: relative; flex: 1; display: flex; justify-content: center; align-items: center; background: #000; overflow: hidden; }
-    video { width: 100%; height: 100%; object-fit: cover; }
-    canvas { display: none; }
-    #target-box { position: absolute; width: 160px; height: 160px; border: 3px dashed #00ffcc; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px; pointer-events: none; transition: width 0.05s ease, height 0.05s ease; }
-    #target-box.active { border-color: #ffcc00; border-style: solid; background: rgba(255, 204, 0, 0.15); }
-    #target-box.jam { border-color: #ff3b30; border-width: 5px; background: rgba(255, 59, 48, 0.4); }
-    #progress-bar { width: 100%; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
-    #progress-fill { width: 0%; height: 100%; background: #00ffcc; }
-    #alarm-banner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.85); display: none; flex-direction: column; justify-content: center; align-items: center; font-size: 32px; font-weight: 900; z-index: 100; text-align: center; animation: flash 0.2s infinite alternate; }
-    @keyframes flash { from { opacity: 0.6; } to { opacity: 1; } }
-    #controls { background: #1c1c1e; padding: 10px 16px; display: flex; flex-direction: column; gap: 5px; border-top: 1px solid #333; }
-    .slider-group { display: flex; flex-direction: column; gap: 5px; }
-    .control-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
-    .control-row label { color: #aaa; width: 85px; }
-    .control-row input[type="range"] { flex: 1; margin: 0 10px; }
-    .val-badge { width: 45px; text-align: right; color: #00ffcc; font-weight: bold; }
-    .status-row { display: flex; justify-content: space-between; font-size: 13px; padding: 2px 0; }
-    .btn-wrap { display: flex; gap: 8px; margin-top: 2px; }
-    button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; color: #fff; cursor: pointer; }
-    #btn-calib { background: #3a3a3c; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* === 고정 가로형 레이아웃 (촬영 화면 최대화 + 슬림 우측 제어바) === */
+    #app-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      background: #000;
+    }
+
+    #viewport-area {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      background: #050608;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    #stream-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    video, #sim-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: #000;
+    }
+
+    #sim-canvas { display: none; }
+
+    #overlay-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    /* 컨베이어 좌->우 주행 HUD 가이드 */
+    #conveyor-flow-badge {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(0, 210, 255, 0.4);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #00d2ff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(6px);
+      pointer-events: none;
+    }
+    .flow-arrow {
+      animation: arrowSlide 1.2s infinite linear;
+      font-size: 12px;
+    }
+    @keyframes arrowSlide {
+      0% { transform: translateX(0); opacity: 0.4; }
+      50% { transform: translateX(4px); opacity: 1; }
+      100% { transform: translateX(8px); opacity: 0.4; }
+    }
+
+    /* 카메라 상태 및 권한 안내 */
+    #camera-status {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      background: rgba(20, 22, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 12px 20px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 13px;
+      color: #fff;
+      display: none;
+      backdrop-filter: blur(8px);
+    }
+
+    /* === 즉각 경보 플래시 배너 (< 0.1초 반응) === */
+    #alarm-banner {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(220, 20, 40, 0.9);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      text-align: center;
+      animation: alertFlash 0.12s infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes alertFlash {
+      from { opacity: 0.75; }
+      to { opacity: 1; }
+    }
+    #alarm-title {
+      font-size: 32px;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    }
+    #alarm-desc {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffe6e6;
+      margin-top: 8px;
+      background: rgba(0,0,0,0.4);
+      padding: 5px 16px;
+      border-radius: 16px;
+    }
+
+    /* === 우측 슬림 대시보드 (220px) === */
+    #sidebar {
+      width: 220px;
+      height: 100%;
+      background: rgba(14, 16, 22, 0.96);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 8px;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .system-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #00d2ff;
+    }
+    .status-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: #333;
+      color: #aaa;
+      font-weight: bold;
+    }
+    .badge-running { background: rgba(52, 199, 89, 0.2); color: #34c759; border: 1px solid #34c759; }
+    .badge-defect { background: rgba(255, 59, 48, 0.2); color: #ff3b30; border: 1px solid #ff3b30; }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    button {
+      padding: 9px;
+      border-radius: 7px;
+      border: none;
+      font-size: 12px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      transition: opacity 0.1s;
+    }
+    button:active { opacity: 0.8; }
     #btn-toggle { background: #007aff; }
+    #btn-inject-defect { background: #ff9500; font-size: 11px; }
+    #btn-sim-mode { background: #2c2c2e; border: 1px solid #444; font-size: 10px; }
+
+    .roi-panel {
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .roi-title {
+      font-size: 10px;
+      color: #888;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+    }
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10px;
+    }
+    .control-row label { color: #aaa; width: 60px; }
+    .control-row input[type="range"] { flex: 1; margin: 0 4px; }
+    .val-badge { width: 30px; text-align: right; color: #00d2ff; font-weight: bold; }
+
+    .log-panel {
+      flex: 1;
+      min-height: 100px;
+      background: #06070a;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+    }
+    .log-title {
+      font-size: 10px;
+      color: #888;
+      font-weight: bold;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+    #log-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      font-size: 10px;
+      font-family: monospace;
+    }
+    .log-item {
+      padding: 3px 5px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      justify-content: space-between;
+    }
+    .log-item.defect {
+      background: rgba(255, 59, 48, 0.25);
+      border-left: 2px solid #ff3b30;
+      color: #ff9090;
+      font-weight: bold;
+    }
+    .log-item.normal {
+      border-left: 2px solid #34c759;
+      color: #a0ffa0;
+    }
   </style>
 </head>
 <body>
-  <div id="camera-view">
-    <video id="v" playsinline autoplay muted></video>
-    <canvas id="c"></canvas>
-    <div id="target-box">
-      <span style="font-size:11px; color:#00ffcc; font-weight:bold;">밝기 감시 영역</span>
-      <div id="progress-bar"><div id="progress-fill"></div></div>
-      <span id="txt-timer" style="font-size:13px; font-weight:bold;">0.0s</span>
-    </div>
-    <div id="alarm-banner">🚨 정체 발생!<br><span style="font-size:18px; margin-top:8px;">라인을 즉시 멈추세요</span></div>
-  </div>
+  <div id="app-container">
+    <!-- 고정 가로 카메라 & 검사 뷰 -->
+    <div id="viewport-area">
+      <div id="stream-wrapper">
+        <video id="v" playsinline webkit-playsinline autoplay muted></video>
+        <canvas id="sim-canvas"></canvas>
+        <canvas id="overlay-canvas"></canvas>
 
-  <div id="controls">
-    <div class="slider-group">
-      <div class="control-row">
-        <label>허용 시간</label>
-        <input type="range" id="rng-time" min="0.3" max="3.0" step="0.1" value="1.0">
-        <span class="val-badge" id="txt-limit">1.0s</span>
-      </div>
-      <div class="control-row">
-        <label>감지 민감도</label>
-        <input type="range" id="rng-sens" min="3" max="40" step="1" value="15">
-        <span class="val-badge" id="txt-sens">15</span>
-      </div>
-      <div class="control-row">
-        <label>영역 가로(W)</label>
-        <input type="range" id="rng-w" min="60" max="320" step="10" value="160">
-        <span class="val-badge" id="txt-w">160px</span>
-      </div>
-      <div class="control-row">
-        <label>영역 세로(H)</label>
-        <input type="range" id="rng-h" min="60" max="320" step="10" value="160">
-        <span class="val-badge" id="txt-h">160px</span>
+        <!-- 컨베이어 주행 경로 안내 -->
+        <div id="conveyor-flow-badge">
+          <span>컨베이어 주행: 좌 ➔ 우</span>
+          <span class="flow-arrow">▶▶▶</span>
+        </div>
+
+        <!-- 카메라 상태 알림 -->
+        <div id="camera-status">카메라 초기화 중...</div>
+
+        <!-- 0.1초 즉시 경보 플래시 배너 -->
+        <div id="alarm-banner">
+          <div id="alarm-title">🚨 불량 자세(전도) 감지!</div>
+          <div id="alarm-desc">상자가 가로로 누웠습니다. 즉시 정지하세요!</div>
+        </div>
       </div>
     </div>
-    <div class="status-row">
-      <span>상태: <b id="txt-status" style="color:#00ffcc;">대기</b></span>
-      <span>밝기차: <b id="txt-diff" style="color:#aaa;">0</b> (배경: <b id="txt-bg" style="color:#aaa;">미등록</b>)</span>
-    </div>
-    <div class="btn-wrap">
-      <button id="btn-calib">1. 빈 벨트 등록</button>
-      <button id="btn-toggle">2. 감시 시작</button>
+
+    <!-- 우측 슬림 대시보드 -->
+    <div id="sidebar">
+      <div class="panel-header">
+        <span class="system-title">밝기 통과 AI 검사</span>
+        <span class="status-badge" id="badge-status">대기</span>
+      </div>
+
+      <div class="btn-group">
+        <button id="btn-toggle">▶ 검사 시작</button>
+        <button id="btn-inject-defect">⚠️ 불량 모의 주입 (키 'T')</button>
+        <button id="btn-sim-mode">🎮 가상 컨베이어 모드: OFF</button>
+      </div>
+
+      <div class="roi-panel">
+        <div class="roi-title">
+          <span>ROI (화면 터치/드래그 이동)</span>
+          <span id="roi-coords">X:300 W:100</span>
+        </div>
+        <div class="control-row">
+          <label>감지 민감도</label>
+          <input type="range" id="rng-sens" min="5" max="60" step="1" value="18">
+          <span class="val-badge" id="txt-sens">18</span>
+        </div>
+        <div class="control-row">
+          <label>영역 가로(W)</label>
+          <input type="range" id="rng-w" min="40" max="250" step="5" value="100">
+          <span class="val-badge" id="txt-w">100</span>
+        </div>
+        <div class="control-row">
+          <label>영역 세로(H)</label>
+          <input type="range" id="rng-h" min="60" max="450" step="5" value="280">
+          <span class="val-badge" id="txt-h">280</span>
+        </div>
+        <div class="control-row">
+          <label>가로 위치(X)</label>
+          <input type="range" id="rng-x" min="0" max="500" step="5" value="300">
+          <span class="val-badge" id="txt-x">300</span>
+        </div>
+      </div>
+
+      <div class="log-panel">
+        <div class="log-title">
+          <span>실시간 판독 이력</span>
+          <span id="txt-stat-count">0건</span>
+        </div>
+        <div id="log-list"></div>
+      </div>
     </div>
   </div>
 
   <script>
-    const v = document.getElementById('v'), c = document.getElementById('c'), ctx = c.getContext('2d', { willReadFrequently: true });
-    const targetBox = document.getElementById('target-box'), progressFill = document.getElementById('progress-fill'), txtTimer = document.getElementById('txt-timer');
-    const txtStatus = document.getElementById('txt-status'), txtBg = document.getElementById('txt-bg'), txtDiff = document.getElementById('txt-diff'), banner = document.getElementById('alarm-banner');
-    const rngTime = document.getElementById('rng-time'), txtLimit = document.getElementById('txt-limit'), rngSens = document.getElementById('rng-sens'), txtSens = document.getElementById('txt-sens');
-    const rngW = document.getElementById('rng-w'), txtW = document.getElementById('txt-w'), rngH = document.getElementById('rng-h'), txtH = document.getElementById('txt-h');
-    const btnCalib = document.getElementById('btn-calib'), btnToggle = document.getElementById('btn-toggle');
+    // =========================================================================
+    // 1. DOM 및 그래픽스 초기화
+    // =========================================================================
+    const v = document.getElementById('v');
+    const simCanvas = document.getElementById('sim-canvas');
+    const simCtx = simCanvas.getContext('2d');
+    const overlay = document.getElementById('overlay-canvas');
+    const octx = overlay.getContext('2d');
+    const banner = document.getElementById('alarm-banner');
+    const alarmTitle = document.getElementById('alarm-title');
+    const alarmDesc = document.getElementById('alarm-desc');
+    const badgeStatus = document.getElementById('badge-status');
+    const logList = document.getElementById('log-list');
+    const statCount = document.getElementById('txt-stat-count');
+    const roiCoords = document.getElementById('roi-coords');
+    const cameraStatus = document.getElementById('camera-status');
 
-    let audioCtx = null, isRunning = false, bgLuma = 50, limitSec = 1.0, sensitivity = 15, boxW = 160, boxH = 160, staySec = 0, lastTime = 0, wakeLock = null;
+    const btnToggle = document.getElementById('btn-toggle');
+    const btnInjectDefect = document.getElementById('btn-inject-defect');
+    const btnSimMode = document.getElementById('btn-sim-mode');
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } } }).then(s => v.srcObject = s).catch(e => alert("카메라 권한 오류: " + e));
-    async function lockScreen() { if ('wakeLock' in navigator) { try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {} } }
+    const rngSens = document.getElementById('rng-sens'), txtSens = document.getElementById('txt-sens');
+    const rngW = document.getElementById('rng-w'), txtW = document.getElementById('txt-w');
+    const rngH = document.getElementById('rng-h'), txtH = document.getElementById('txt-h');
+    const rngX = document.getElementById('rng-x'), txtX = document.getElementById('txt-x');
 
-    rngTime.oninput = () => { limitSec = parseFloat(rngTime.value); txtLimit.textContent = limitSec.toFixed(1) + "s"; };
-    rngSens.oninput = () => { sensitivity = parseInt(rngSens.value, 10); txtSens.textContent = sensitivity; };
-    rngW.oninput = () => { boxW = parseInt(rngW.value, 10); txtW.textContent = boxW + "px"; targetBox.style.width = boxW + "px"; };
-    rngH.oninput = () => { boxH = parseInt(rngH.value, 10); txtH.textContent = boxH + "px"; targetBox.style.height = boxH + "px"; };
+    let audioCtx = null;
+    let isRunning = false;
+    let isSimMode = false;
+    let totalInspected = 0;
 
-    function getBrightness() {
-      if (!v.videoWidth || !v.videoHeight) return 0;
-      const rw = Math.min(boxW, v.videoWidth), rh = Math.min(boxH, v.videoHeight);
-      const rx = Math.max(0, Math.floor((v.videoWidth - rw) / 2)), ry = Math.max(0, Math.floor((v.videoHeight - rh) / 2));
-      c.width = rw; c.height = rh;
-      ctx.drawImage(v, rx, ry, rw, rh, 0, 0, rw, rh);
-      const data = ctx.getImageData(0, 0, rw, rh).data;
+    // 가로 고정 가상 해상도 (640 x 360)
+    const BASE_W = 640;
+    const BASE_H = 360;
+    overlay.width = BASE_W;
+    overlay.height = BASE_H;
+    simCanvas.width = BASE_W;
+    simCanvas.height = BASE_H;
+
+    // 컨베이어 좌->우 주행 상정: 중앙 약간 우측(X: 300)에 수직 검사선 배치
+    let roi = {
+      x: 300,
+      y: 40,
+      w: 100,
+      h: 280
+    };
+    let sensitivity = 18;
+
+    let isBoxPresent = false;
+    let boxPresentTime = 0;
+    let alarmTimer = null;
+
+    window.testDefectTrigger = false;
+
+    // =========================================================================
+    // 2. 가로 터치 좌표계 1:1 매핑 핸들러
+    // =========================================================================
+    let isDraggingRoi = false;
+    let dragOffset = { x: 0, y: 0 };
+
+    function getTouchPos(e) {
+      const rect = overlay.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const scaleX = BASE_W / rect.width;
+      const scaleY = BASE_H / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
+    }
+
+    function isInsideRoi(pos) {
+      return pos.x >= roi.x && pos.x <= roi.x + roi.w &&
+             pos.y >= roi.y && pos.y <= roi.y + roi.h;
+    }
+
+    function onPointerDown(e) {
+      const pos = getTouchPos(e);
+      if (isInsideRoi(pos)) {
+        isDraggingRoi = true;
+        dragOffset.x = pos.x - roi.x;
+        dragOffset.y = pos.y - roi.y;
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!isDraggingRoi) return;
+      const pos = getTouchPos(e);
+      roi.x = Math.max(0, Math.min(BASE_W - roi.w, pos.x - dragOffset.x));
+      roi.y = Math.max(0, Math.min(BASE_H - roi.h, pos.y - dragOffset.y));
+      rngX.value = Math.round(roi.x);
+      txtX.textContent = Math.round(roi.x);
+      updateRoiText();
+    }
+
+    function onPointerUp() {
+      isDraggingRoi = false;
+    }
+
+    overlay.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+
+    overlay.addEventListener('touchstart', onPointerDown, { passive: false });
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
+    window.addEventListener('touchend', onPointerUp);
+
+    function updateRoiText() {
+      roiCoords.textContent = `X:${Math.round(roi.x)} W:${roi.w}`;
+    }
+
+    rngSens.oninput = () => { sensitivity = parseInt(rngSens.value); txtSens.textContent = sensitivity; };
+    rngW.oninput = () => { roi.w = parseInt(rngW.value); txtW.textContent = roi.w; updateRoiText(); };
+    rngH.oninput = () => { roi.h = parseInt(rngH.value); txtH.textContent = roi.h; updateRoiText(); };
+    rngX.oninput = () => { roi.x = parseInt(rngX.value); txtX.textContent = roi.x; updateRoiText(); };
+
+    // =========================================================================
+    // 3. 모바일 카메라 재생 보장 및 블랙스크린 방지 루틴
+    // =========================================================================
+    async function startCamera() {
+      cameraStatus.style.display = "block";
+      cameraStatus.textContent = "📷 후면 카메라 연결 중...";
+
+      v.muted = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');
+      v.setAttribute('webkit-playsinline', '');
+      v.setAttribute('autoplay', '');
+      v.setAttribute('muted', '');
+
+      const constraintsList = [
+        { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        { audio: false, video: { facingMode: "environment" } },
+        { audio: false, video: true }
+      ];
+
+      let stream = null;
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        for (const c of constraintsList) {
+          try {
+            stream = await navigator.mediaDevices.getUserMedia(c);
+            if (stream) break;
+          } catch (e) {
+            console.warn("Camera constraint fallback:", e);
+          }
+        }
+      }
+
+      if (stream) {
+        v.srcObject = stream;
+        v.onloadedmetadata = async () => {
+          try {
+            await v.play();
+            cameraStatus.style.display = "none";
+            v.style.display = "block";
+            simCanvas.style.display = "none";
+            console.log("✔ 카메라 스트림 재생 성공:", v.videoWidth, "x", v.videoHeight);
+          } catch (err) {
+            console.error("Video play block:", err);
+            cameraStatus.innerHTML = "▶ 화면을 터치하면 카메라가 켜집니다";
+            const unlockPlay = () => {
+              v.play().then(() => { cameraStatus.style.display = "none"; });
+              window.removeEventListener('click', unlockPlay);
+              window.removeEventListener('touchstart', unlockPlay);
+            };
+            window.addEventListener('click', unlockPlay);
+            window.addEventListener('touchstart', unlockPlay);
+          }
+        };
+      } else {
+        cameraStatus.innerHTML = "⚠️ 카메라를 열 수 없습니다<br><span style='font-size:11px'>[가상 컨베이어 모드]로 자동 전환합니다</span>";
+        setTimeout(() => {
+          setSimMode(true);
+          cameraStatus.style.display = "none";
+        }, 1200);
+      }
+    }
+    startCamera();
+
+    function setSimMode(on) {
+      isSimMode = on;
+      if (isSimMode) {
+        btnSimMode.textContent = "🎮 가상 컨베이어 모드: ON";
+        btnSimMode.style.background = "#30d158";
+        v.style.display = 'none';
+        simCanvas.style.display = 'block';
+      } else {
+        btnSimMode.textContent = "🎮 가상 컨베이어 모드: OFF";
+        btnSimMode.style.background = "#2c2c2e";
+        v.style.display = 'block';
+        simCanvas.style.display = 'none';
+      }
+    }
+    window.setSimMode = setSimMode;
+    btnSimMode.onclick = () => setSimMode(!isSimMode);
+
+    // =========================================================================
+    // 4. 가상 컨베이어 시뮬레이션 상태 (좌 ➔ 우 주행)
+    // =========================================================================
+    let simBoxes = [];
+    let nextSpawnTime = 0;
+
+    function updateSimulation(now) {
+      simCtx.fillStyle = "#1e222d";
+      simCtx.fillRect(0, 0, BASE_W, BASE_H);
+
+      // 컨베이어 벨트 (화면 수평 관통: 좌 -> 우)
+      simCtx.fillStyle = "#141720";
+      simCtx.fillRect(0, 40, BASE_W, 280);
+      simCtx.strokeStyle = "#2c3244";
+      simCtx.lineWidth = 2;
+      simCtx.strokeRect(0, 40, BASE_W, 280);
+
+      // 상자 주기적 스폰 (좌측 x: -100에서 시작)
+      if (now > nextSpawnTime) {
+        const isToppled = window.testDefectTrigger;
+        if (isToppled) window.testDefectTrigger = false;
+        simBoxes.push({
+          x: -120,
+          y: isToppled ? 140 : 60,
+          w: isToppled ? 140 : 60,
+          h: isToppled ? 60 : 240,
+          toppled: isToppled,
+          passed: false
+        });
+        nextSpawnTime = now + 2000;
+      }
+
+      // 좌 -> 우 이동 렌더링
+      for (let i = simBoxes.length - 1; i >= 0; i--) {
+        const b = simBoxes[i];
+        b.x += 4.5; // 좌 -> 우 이송 속도
+
+        simCtx.fillStyle = b.toppled ? "#e08b3a" : "#e6af5d";
+        simCtx.fillRect(b.x, b.y, b.w, b.h);
+        simCtx.strokeStyle = "#5a3a14";
+        simCtx.lineWidth = 3;
+        simCtx.strokeRect(b.x, b.y, b.w, b.h);
+
+        simCtx.fillStyle = "#fff";
+        simCtx.font = "bold 11px sans-serif";
+        simCtx.fillText(b.toppled ? "누움(불량)" : "정상", b.x + 6, b.y + 22);
+
+        if (b.x > BASE_W + 150) {
+          simBoxes.splice(i, 1);
+        }
+      }
+    }
+
+    // =========================================================================
+    // 5. [향후 코랩 MobileNetV3 ONNX 모델 장착 슬롯: inspect_box_posture]
+    // =========================================================================
+    function inspect_box_posture(box_crop_canvas) {
+      if (window.testDefectTrigger) {
+        window.testDefectTrigger = false;
+        return { is_defect: true, label: "TOPPLED (가로 누움 불량)", confidence: 0.98 };
+      }
+
+      if (isSimMode) {
+        const currentBox = simBoxes.find(b => b.x + b.w > roi.x && b.x < roi.x + roi.w);
+        if (currentBox && currentBox.toppled) {
+          return { is_defect: true, label: "TOPPLED (가로 누움 불량)", confidence: 0.96 };
+        }
+      }
+
+      return { is_defect: false, label: "NORMAL (정상 직립)", confidence: 0.99 };
+    }
+
+    // =========================================================================
+    // 6. 실시간 경보 시스템 (0.1초 내 비프음 & 플래시 발령)
+    // =========================================================================
+    function soundAlert() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.9, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+      } catch (e) {
+        console.warn("AudioContext 오류:", e);
+      }
+      if ("vibrate" in navigator) navigator.vibrate(200);
+    }
+
+    function triggerDefectAlarm(label, conf) {
+      alarmTitle.textContent = "🚨 불량 자세(전도) 감지!";
+      alarmDesc.textContent = `${label} (신뢰도 ${(conf * 100).toFixed(0)}%)`;
+      banner.style.display = 'flex';
+      badgeStatus.textContent = "🚨 불량 감지";
+      badgeStatus.className = "status-badge badge-defect";
+
+      soundAlert();
+
+      clearTimeout(alarmTimer);
+      alarmTimer = setTimeout(() => {
+        banner.style.display = 'none';
+        if (isRunning) {
+          badgeStatus.textContent = "감시 중";
+          badgeStatus.className = "status-badge badge-running";
+        }
+      }, 1500);
+
+      addLog(label, true, conf);
+    }
+
+    function triggerJamAlarm() {
+      alarmTitle.textContent = "🚨 라인 정체(Jam) 발생!";
+      alarmDesc.textContent = "상자가 2초 이상 통과 구역에 멈춰 있습니다";
+      banner.style.display = 'flex';
+      badgeStatus.textContent = "🚨 정체 발생";
+      badgeStatus.className = "status-badge badge-defect";
+      soundAlert();
+    }
+
+    function addLog(label, isDefect, conf) {
+      totalInspected++;
+      statCount.textContent = `${totalInspected}건`;
+      const timeStr = new Date().toTimeString().split(' ')[0];
+      const item = document.createElement('div');
+      item.className = `log-item ${isDefect ? 'defect' : 'normal'}`;
+      item.innerHTML = `
+        <span>[${timeStr}] ${label}</span>
+        <span>${(conf * 100).toFixed(0)}%</span>
+      `;
+      logList.insertBefore(item, logList.firstChild);
+      if (logList.children.length > 30) logList.removeChild(logList.lastChild);
+    }
+
+    // =========================================================================
+    // 7. 통과 즉시 판별 파이프라인 루프 (좌 -> 우 진입 포착)
+    // =========================================================================
+    let offscreenC = document.createElement('canvas');
+    offscreenC.width = BASE_W;
+    offscreenC.height = BASE_H;
+    let offCtx = offscreenC.getContext('2d', { willReadFrequently: true });
+
+    let cropCanvas = document.createElement('canvas');
+    let cropCtx = cropCanvas.getContext('2d');
+
+    let baselineLuma = 40;
+
+    function getRoiLuma() {
+      const src = isSimMode ? simCanvas : v;
+      if (!isSimMode && (!v.videoWidth || !v.videoHeight)) return baselineLuma;
+
+      offCtx.drawImage(src, 0, 0, BASE_W, BASE_H);
+      const imgData = offCtx.getImageData(roi.x, roi.y, roi.w, roi.h);
+      const data = imgData.data;
       let sum = 0;
-      for (let i = 0; i < data.length; i += 4) sum += 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+      for (let i = 0; i < data.length; i += 4) {
+        sum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      }
       return sum / (data.length / 4);
     }
 
-    btnCalib.onclick = () => { bgLuma = getBrightness(); txtBg.textContent = Math.round(bgLuma); alert(`빈 벨트 등록 완료 (측정 밝기: ${Math.round(bgLuma)})`); };
-    function soundAlert() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
-      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.8, audioCtx.currentTime); osc.connect(gain); gain.connect(audioCtx.destination);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-      if ("vibrate" in navigator) navigator.vibrate(150);
-    }
+    let lastLoopTime = performance.now();
 
+    function renderLoop(now) {
+      const dt = (now - lastLoopTime) / 1000;
+      lastLoopTime = now;
+
+      if (isSimMode) updateSimulation(now);
+
+      // 오버레이 렌더링
+      octx.clearRect(0, 0, BASE_W, BASE_H);
+
+      // 검사 Trigger ROI 통과선 박스
+      octx.lineWidth = 3;
+      octx.setLineDash(isBoxPresent ? [] : [6, 4]);
+      octx.strokeStyle = isBoxPresent ? "#ffcc00" : "#00d2ff";
+      octx.strokeRect(roi.x, roi.y, roi.w, roi.h);
+      octx.setLineDash([]);
+
+      octx.fillStyle = isBoxPresent ? "rgba(255, 204, 0, 0.18)" : "rgba(0, 210, 255, 0.08)";
+      octx.fillRect(roi.x, roi.y, roi.w, roi.h);
+
+      // ROI 타이틀 (좌측 진입 화살표 포함)
+      octx.fillStyle = "#00d2ff";
+      octx.font = "bold 11px sans-serif";
+      octx.fillText("▶ AI 통과선 [좌➔우]", roi.x + 4, roi.y + 16);
+
+      if (isRunning) {
+        let presentNow = false;
+        if (isSimMode) {
+          presentNow = simBoxes.some(b => b.x + b.w > roi.x && b.x < roi.x + roi.w);
+        } else {
+          const curLuma = getRoiLuma();
+          presentNow = Math.abs(curLuma - baselineLuma) >= sensitivity;
+        }
+
+        if (presentNow) {
+          boxPresentTime += dt;
+          if (!isBoxPresent) {
+            // [좌측에서 ROI 진입 순간! ➔ 0.05초 즉시 크롭 및 AI 판독]
+            isBoxPresent = true;
+            cropCanvas.width = roi.w;
+            cropCanvas.height = roi.h;
+            cropCtx.drawImage(isSimMode ? simCanvas : v, roi.x, roi.y, roi.w, roi.h, 0, 0, roi.w, roi.h);
+
+            const result = inspect_box_posture(cropCanvas);
+            if (result.is_defect) {
+              triggerDefectAlarm(result.label, result.confidence);
+            } else {
+              addLog("NORMAL (정상 직립)", false, result.confidence);
+            }
+          }
+
+          if (boxPresentTime >= 2.0 && banner.style.display !== 'flex') {
+            triggerJamAlarm();
+          }
+        } else {
+          isBoxPresent = false;
+          boxPresentTime = 0;
+        }
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+    requestAnimationFrame(renderLoop);
+
+    // =========================================================================
+    // 8. 사용자 이벤트 및 단축키 바인딩
+    // =========================================================================
     btnToggle.onclick = () => {
-      if (!isRunning) {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        lockScreen(); isRunning = true; btnToggle.textContent = "감시 중지"; btnToggle.style.background = "#ff3b30";
-        lastTime = performance.now(); requestAnimationFrame(loop);
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      isRunning = !isRunning;
+      if (isRunning) {
+        btnToggle.textContent = "⏹ 검사 중지";
+        btnToggle.style.background = "#ff3b30";
+        badgeStatus.textContent = "감시 중";
+        badgeStatus.className = "status-badge badge-running";
       } else {
-        isRunning = false; btnToggle.textContent = "2. 감시 시작"; btnToggle.style.background = "#007aff"; resetUI();
+        btnToggle.textContent = "▶ 검사 시작";
+        btnToggle.style.background = "#007aff";
+        badgeStatus.textContent = "대기";
+        badgeStatus.className = "status-badge";
+        banner.style.display = 'none';
+        isBoxPresent = false;
+        boxPresentTime = 0;
       }
     };
-    function resetUI() { staySec = 0; banner.style.display = 'none'; targetBox.classList.remove('active', 'jam'); progressFill.style.width = '0%'; txtTimer.textContent = '0.0s'; txtStatus.textContent = '대기'; txtStatus.style.color = '#00ffcc'; }
 
-    function loop(now) {
-      if (!isRunning) return;
-      const dt = (now - lastTime) / 1000; lastTime = now;
-      const currentLuma = getBrightness(), diff = Math.abs(currentLuma - bgLuma);
-      txtDiff.textContent = Math.round(diff);
-      const isPresent = diff >= sensitivity;
-      if (isPresent) {
-        staySec += dt; targetBox.classList.add('active'); txtStatus.textContent = "박스 통과 중"; txtStatus.style.color = "#ffcc00";
-        progressFill.style.width = Math.min((staySec / limitSec) * 100, 100) + "%"; txtTimer.textContent = staySec.toFixed(1) + "s";
-        if (staySec >= limitSec) { targetBox.classList.add('jam'); banner.style.display = 'flex'; txtStatus.textContent = "🚨 정체 발생!"; txtStatus.style.color = "#ff3b30"; soundAlert(); }
-      } else {
-        staySec = 0; banner.style.display = 'none'; targetBox.classList.remove('active', 'jam'); progressFill.style.width = '0%'; txtTimer.textContent = '0.0s'; txtStatus.textContent = "정상 통과"; txtStatus.style.color = "#00ffcc";
+    function injectDefect() {
+      window.testDefectTrigger = true;
+      btnInjectDefect.style.background = "#ff3b30";
+      setTimeout(() => btnInjectDefect.style.background = "#ff9500", 600);
+      if (isSimMode) {
+        const approaching = simBoxes.find(b => b.x < roi.x && b.x + b.w > 0);
+        if (approaching) {
+          approaching.toppled = true;
+          approaching.w = 140;
+          approaching.h = 60;
+          approaching.y = 140;
+        } else {
+          simBoxes.push({
+            x: roi.x - 80,
+            y: 140,
+            w: 140,
+            h: 60,
+            toppled: true,
+            passed: false
+          });
+        }
       }
-      requestAnimationFrame(loop);
+      console.log("[TEST] 불량(누움) 모의 주입 활성화 완료");
     }
+
+    btnInjectDefect.onclick = injectDefect;
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 't' || e.key === 'T' || e.code === 'KeyT' || e.key === 'KeyT') {
+        injectDefect();
+      }
+    });
   </script>
 </body>
 </html>

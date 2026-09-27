@@ -1,0 +1,7 @@
+{
+  "index_check": true,
+  "light_normal": true,
+  "light_defect_alarm": true,
+  "color_defect_alarm": true,
+  "console_errors": []
+}
