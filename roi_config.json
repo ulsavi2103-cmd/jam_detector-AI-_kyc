@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-09-27T14:00:00.000Z",
+  "description": "15x2 소박스 묶음 4포인트 원근 보정(Perspective Warp) ROI 설정",
+  "referenceResolution": {
+    "width": 860,
+    "height": 500
+  },
+  "warpOutput": {
+    "width": 600,
+    "height": 160,
+    "rows": 2,
+    "cols": 15
+  },
+  "points": [
+    { "name": "TL (좌상)", "x": 60, "y": 120 },
+    { "name": "TR (우상)", "x": 800, "y": 90 },
+    { "name": "BR (우하)", "x": 830, "y": 390 },
+    { "name": "BL (좌하)", "x": 30, "y": 370 }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "testDate": "2026-09-27 14:07:31",
+  "status": "PASS",
+  "assertions": {
+    "openCvReady": true,
+    "warpGridRendered": true,
+    "pointDragAndLocalStorageSave": true,
+    "tiltDefectDetectionAndAlarm": true,
+    "zeroConsoleErrors": true
+  },
+  "screenshots": [
+    "01_warp_grid_initial.png",
+    "02_warp_point_dragged.png",
+    "03_tilt_defect_alarm.png"
+  ],
+  "consoleErrors": []
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>3x10 이송 박스 전도(누움) 실시간 감지기</title>
+  <title>15x2 이송 박스 전도(누움) 실시간 감지기</title>
   <style>
     :root {
       --bg: #090a0f;
@@ -106,8 +106,49 @@
       left: 0;
       width: 100%;
       height: 100%;
-      pointer-events: none;
+      pointer-events: auto; /* 4포인트 드래그 캘리브레이션 활성화 */
+      cursor: crosshair;
       display: block;
+      touch-action: none; /* 모바일 터치 드래그 스크롤 방지 */
+    }
+
+    /* 4포인트 원근 보정 가이드 알림 바 */
+    #warp-guide-banner {
+      position: absolute;
+      top: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid var(--accent);
+      backdrop-filter: blur(10px);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 30;
+      box-shadow: 0 4px 16px rgba(0, 229, 255, 0.25);
+      transition: all 0.3s ease;
+      white-space: nowrap;
+    }
+    #warp-guide-banner.hidden { display: none; }
+    .btn-sm-action {
+      background: rgba(0, 229, 255, 0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      min-width: auto;
+    }
+    .btn-sm-action:hover {
+      background: var(--accent);
+      color: #000;
     }
 
     /* 플로팅 배지 및 썸네일 */
@@ -376,7 +417,7 @@
   <header>
     <div class="brand">
       <a href="index.html" class="back-btn">‹ 메뉴</a>
-      <h1>3x10 박스 전도(누움) 실시간 감지</h1>
+      <h1>15x2 박스 전도(누움) 실시간 감지</h1>
     </div>
     <div id="cv-status" class="cv-badge">
       <span class="dot"></span>
@@ -393,7 +434,13 @@
 
     <div id="orientation-hint">
       <div class="hint-title">🔄 스마트폰을 가로로 돌려주세요</div>
-      <div class="hint-desc">3x10 전체 영역이 가로 화면에 완벽하게 일치합니다</div>
+      <div class="hint-desc">15x2 전체 영역이 가로 화면에 완벽하게 일치합니다</div>
+    </div>
+
+    <div id="warp-guide-banner">
+      <span>🎯 <b>4포인트 왜곡 보정:</b> 모서리 4개 점(①좌상, ②우상, ③우하, ④좌하)을 박스 모서리로 드래그하세요</span>
+      <button id="btn-quick-save-roi" class="btn-sm-action">💾 JSON 저장</button>
+      <button id="btn-quick-reset-roi" class="btn-sm-action">🔄 4점 리셋</button>
     </div>
 
     <div id="state-badge">
@@ -408,7 +455,7 @@
 
     <div id="alarm-banner">
       <div class="alarm-title">🚨 전도(누움) 박스 불량 감지!</div>
-      <div class="alarm-sub" id="alarm-detail">2행 5열, 3행 2열 불량 의심</div>
+      <div class="alarm-sub" id="alarm-detail">1행 5열, 2행 12열 불량 의심</div>
       <button id="btn-dismiss-alarm">확인 / 경보 해제</button>
     </div>
   </div>
@@ -421,8 +468,9 @@
     </div>
 
     <div class="btn-row">
+      <button id="btn-toggle-warp" class="active" title="4포인트 원근 왜곡 보정을 켜거나 끕니다">🎯 4점보정 ON</button>
       <button id="btn-autofit" title="현재 화면 크기에 격자를 꽉 차게 맞춥니다">📐 자동맞춤</button>
-      <button id="btn-toggle-layout" title="가로 10x3 또는 세로 3x10 격자로 전환합니다">🔀 격자: 10x3</button>
+      <button id="btn-toggle-layout" title="가로 15x2 또는 세로 2x15 격자로 전환합니다">🔀 격자: 15x2</button>
       <button id="btn-rotate">🔄 회전(0°)</button>
       <button id="btn-open-settings">⚙️ 설정</button>
       <button id="btn-sim-mode">🎮 시뮬레이션</button>
@@ -466,13 +514,13 @@
         </div>
         <div class="control-item">
           <label>셀 가로(W)</label>
-          <input type="range" id="rng-cell-w" min="20" max="180" step="2" value="80">
-          <span class="val-badge" id="val-cell-w">80px</span>
+          <input type="range" id="rng-cell-w" min="15" max="150" step="1" value="50">
+          <span class="val-badge" id="val-cell-w">50px</span>
         </div>
         <div class="control-item">
           <label>셀 세로(H)</label>
-          <input type="range" id="rng-cell-h" min="20" max="220" step="2" value="110">
-          <span class="val-badge" id="val-cell-h">110px</span>
+          <input type="range" id="rng-cell-h" min="30" max="280" step="2" value="150">
+          <span class="val-badge" id="val-cell-h">150px</span>
         </div>
         <div class="control-item">
           <label>셀 간격(Gap)</label>
@@ -486,7 +534,24 @@
         </div>
       </div>
 
-      <button id="btn-save-settings" style="margin-top:10px; background:var(--accent);">설정 완료 및 닫기</button>
+      <!-- 4포인트 원근 보정 ROI 설정 파일 (roi_config.json) 영구 보관 섹션 -->
+      <div style="margin-top:14px; padding:10px; background:rgba(0,0,0,0.35); border-radius:8px; border:1px solid rgba(0, 229, 255, 0.3);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:11px; font-weight:700; color:var(--accent);">📐 4포인트 원근 보정 ROI 설정 (roi_config.json)</span>
+          <span id="roi-save-status" style="font-size:10px; color:#34c759;">자동 저장 활성화됨</span>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button id="btn-export-roi" style="flex:1; background:#0284c7; padding:6px 8px; font-size:11px; border-radius:6px; min-width:130px;">💾 JSON 파일 내보내기</button>
+          <button id="btn-import-roi" style="flex:1; background:#4f46e5; padding:6px 8px; font-size:11px; border-radius:6px; min-width:130px;">📂 JSON 파일 불러오기</button>
+          <button id="btn-reset-roi" style="flex:1; background:#475569; padding:6px 8px; font-size:11px; border-radius:6px; min-width:90px;">🔄 4점 리셋</button>
+          <input type="file" id="file-roi-input" accept=".json" style="display:none;">
+        </div>
+        <div style="font-size:10px; color:var(--text-dim); margin-top:6px; line-height:1.4;">
+          💡 <b>10초 현장 세팅:</b> 화면의 4개 모서리(①좌상, ②우상, ③우하, ④좌하)를 드래그하면 브라우저에 실시간 자동 저장되며, `roi_config.json`으로 영구 백업/복원할 수 있습니다.
+        </div>
+      </div>
+
+      <button id="btn-save-settings" style="margin-top:12px; background:var(--accent);">설정 완료 및 닫기</button>
     </div>
   </div>
 
@@ -537,6 +602,16 @@
     const rngGap = document.getElementById('rng-gap'), valGap = document.getElementById('val-gap');
     const rngSampleIdx = document.getElementById('rng-sample-idx'), valSampleIdx = document.getElementById('val-sample-idx');
 
+    const btnToggleWarp = document.getElementById('btn-toggle-warp');
+    const warpGuideBanner = document.getElementById('warp-guide-banner');
+    const btnQuickSaveRoi = document.getElementById('btn-quick-save-roi');
+    const btnQuickResetRoi = document.getElementById('btn-quick-reset-roi');
+    const btnExportRoi = document.getElementById('btn-export-roi');
+    const btnImportRoi = document.getElementById('btn-import-roi');
+    const btnResetRoi = document.getElementById('btn-reset-roi');
+    const fileRoiInput = document.getElementById('file-roi-input');
+    const roiSaveStatus = document.getElementById('roi-save-status');
+
     const btnAutoFit = document.getElementById('btn-autofit');
     const btnToggleLayout = document.getElementById('btn-toggle-layout');
     const btnModalAutoFit = document.getElementById('btn-modal-autofit');
@@ -550,16 +625,324 @@
     const workCanvas = document.createElement('canvas');
     const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
 
-    // 시스템 파라미터 (원터치 자동 맞춤 및 방향 전환 지원)
-    let ROWS = 3;
-    let COLS = 10;
-    let isVerticalGrid = false; // false: 10x3(가로), true: 3x10(세로)
-    let gridX = 30, gridY = 40, cellW = 80, cellH = 110, cellGap = 1;
+    // --- [4포인트 원근 보정(Perspective Warp) 엔진 파라미터] ---
+    let isWarpMode = true; // 대각선 카메라 사다리꼴 왜곡 보정 모드
+    const WARP_OUTPUT_W = 600; // 정규화 평면 가로 해상도
+    const WARP_OUTPUT_H = 160; // 정규화 평면 세로 해상도
+    const warpCanvas = document.createElement('canvas');
+    warpCanvas.width = WARP_OUTPUT_W;
+    warpCanvas.height = WARP_OUTPUT_H;
+    const warpCtx = warpCanvas.getContext('2d', { willReadFrequently: true });
+
+    // 4개 제어점 (TL, TR, BR, BL) 기본 사다리꼴 좌표
+    let warpPoints = [
+      { x: 60, y: 120, label: 'TL', num: 1, name: '좌상단' },
+      { x: 800, y: 90,  label: 'TR', num: 2, name: '우상단' },
+      { x: 830, y: 390, label: 'BR', num: 3, name: '우하단' },
+      { x: 30,  y: 370, label: 'BL', num: 4, name: '좌하단' }
+    ];
+    let activeDragPointIdx = -1; // 드래그 중인 포인트 인덱스 (-1: 없음)
+    const WARP_HANDLE_RADIUS = 16;
+    let perspectiveM = null; // cv.Mat (Perspective Transform Matrix)
+    window.warpPoints = warpPoints;
+
+    // 시스템 파라미터 (15열 × 2단 규격 기준, 총 30개 박스)
+    let ROWS = 2;
+    let COLS = 15;
+    let isVerticalGrid = false; // false: 15x2(가로), true: 2x15(세로)
+    let gridX = 20, gridY = 40, cellW = 52, cellH = 160, cellGap = 1;
     let matchThreshold = 0.70;
     let stopThreshold = 2.5;
-    let sampleCellIndex = 0; // 0-based: 0 ~ 29
+    let sampleCellIndex = 0; // 0-based: 0 ~ 29 (1번 ~ 30번)
     let rotationDegree = 0; // 0, 90, 180, 270
     let hasUserCustomizedGrid = false;
+
+    const STOP_STABLE_DURATION = 800; // 정지 유지 판정 시간: 약 0.8초 (0.5~1.0초 정지 찰나 포착)
+    const COOLDOWN_LOCK_DURATION = 10800; // 실제 현장 속도(기존 60% 수준) 반영 락: 10.8초 (우측 10개 배출 -> 전진 3회 반복 방어)
+    let stopCheckStartTime = null;
+    let cooldownStartTime = null;
+
+    // --- 1-A. 4포인트 Bilinear 원근 보간 및 행렬 엔진 ---
+    function getInterpolatedPoint(u, v) {
+      const p0 = warpPoints[0]; // TL
+      const p1 = warpPoints[1]; // TR
+      const p2 = warpPoints[2]; // BR
+      const p3 = warpPoints[3]; // BL
+      const x = (1 - u) * (1 - v) * p0.x + u * (1 - v) * p1.x + u * v * p2.x + (1 - u) * v * p3.x;
+      const y = (1 - u) * (1 - v) * p0.y + u * (1 - v) * p1.y + u * v * p2.y + (1 - u) * v * p3.y;
+      return { x, y };
+    }
+
+    function updatePerspectiveMatrix() {
+      if (!isOpenCvReady || typeof cv === 'undefined') return;
+      try {
+        if (perspectiveM) {
+          perspectiveM.delete();
+          perspectiveM = null;
+        }
+        const srcCoords = [
+          warpPoints[0].x, warpPoints[0].y,
+          warpPoints[1].x, warpPoints[1].y,
+          warpPoints[2].x, warpPoints[2].y,
+          warpPoints[3].x, warpPoints[3].y
+        ];
+        const dstCoords = [
+          0, 0,
+          WARP_OUTPUT_W, 0,
+          WARP_OUTPUT_W, WARP_OUTPUT_H,
+          0, WARP_OUTPUT_H
+        ];
+        const srcMat = cv.matFromArray(4, 1, cv.CV_32FC2, srcCoords);
+        const dstMat = cv.matFromArray(4, 1, cv.CV_32FC2, dstCoords);
+        perspectiveM = cv.getPerspectiveTransform(srcMat, dstMat);
+        srcMat.delete();
+        dstMat.delete();
+        // console.log('[Warp Engine] 변환 행렬 재계산 완료');
+      } catch (err) {
+        console.warn('Perspective Matrix 계산 에러:', err);
+      }
+    }
+
+    // --- 1-B. ROI 설정값 영구 자동 저장 (localStorage & roi_config.json) ---
+    function saveRoiConfigToLocalStorage() {
+      try {
+        const cfg = {
+          version: '1.0.0',
+          updatedAt: new Date().toISOString(),
+          referenceResolution: { width: overlayCanvas.width || 860, height: overlayCanvas.height || 500 },
+          warpOutput: { width: WARP_OUTPUT_W, height: WARP_OUTPUT_H, rows: ROWS, cols: COLS },
+          points: warpPoints.map(p => ({ name: p.name || p.label, x: Math.round(p.x), y: Math.round(p.y) }))
+        };
+        localStorage.setItem('box_tilt_roi_config', JSON.stringify(cfg));
+        if (roiSaveStatus) {
+          roiSaveStatus.textContent = '자동 저장 완료 (' + new Date().toLocaleTimeString() + ')';
+          roiSaveStatus.style.color = '#34c759';
+        }
+      } catch (e) {
+        console.warn('LocalStorage 저장 실패:', e);
+      }
+    }
+
+    function loadRoiConfig() {
+      try {
+        const saved = localStorage.getItem('box_tilt_roi_config');
+        if (saved) {
+          const cfg = JSON.parse(saved);
+          if (cfg && cfg.points && cfg.points.length === 4) {
+            for (let i = 0; i < 4; i++) {
+              warpPoints[i].x = cfg.points[i].x;
+              warpPoints[i].y = cfg.points[i].y;
+            }
+            console.log('[ROI Config] localStorage에서 4포인트 로드 성공:', warpPoints);
+            updatePerspectiveMatrix();
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('LocalStorage 로드 실패:', e);
+      }
+
+      // localStorage에 없을 시 기본 roi_config.json 파일 비동기 요청
+      fetch('roi_config.json')
+        .then(res => res.json())
+        .then(cfg => {
+          if (cfg && cfg.points && cfg.points.length === 4) {
+            for (let i = 0; i < 4; i++) {
+              warpPoints[i].x = cfg.points[i].x;
+              warpPoints[i].y = cfg.points[i].y;
+            }
+            console.log('[ROI Config] roi_config.json 파일에서 로드 성공:', warpPoints);
+            updatePerspectiveMatrix();
+          }
+        })
+        .catch(err => {
+          console.log('[ROI Config] 기본 좌표 유지:', err);
+          updatePerspectiveMatrix();
+        });
+    }
+
+    function exportRoiConfigJson() {
+      const cfg = {
+        version: '1.0.0',
+        updatedAt: new Date().toISOString(),
+        description: '15x2 소박스 묶음 4포인트 원근 보정(Perspective Warp) ROI 설정',
+        referenceResolution: { width: overlayCanvas.width || 860, height: overlayCanvas.height || 500 },
+        warpOutput: { width: WARP_OUTPUT_W, height: WARP_OUTPUT_H, rows: ROWS, cols: COLS },
+        points: warpPoints.map(p => ({ name: p.name || p.label, x: Math.round(p.x), y: Math.round(p.y) }))
+      };
+      const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'roi_config.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      if (roiSaveStatus) {
+        roiSaveStatus.textContent = 'JSON 다운로드 완료';
+        roiSaveStatus.style.color = '#0ea5e9';
+      }
+    }
+
+    function importRoiConfigJson(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const cfg = JSON.parse(e.target.result);
+          if (cfg && cfg.points && cfg.points.length === 4) {
+            for (let i = 0; i < 4; i++) {
+              warpPoints[i].x = cfg.points[i].x;
+              warpPoints[i].y = cfg.points[i].y;
+            }
+            saveRoiConfigToLocalStorage();
+            updatePerspectiveMatrix();
+            alert('✅ roi_config.json 설정이 성공적으로 적용 및 자동 저장되었습니다!');
+          } else {
+            alert('⚠️ 올바른 4포인트 ROI 설정 파일 형식이 아닙니다.');
+          }
+        } catch (err) {
+          alert('⚠️ JSON 파일 파싱 에러: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetWarpPointsToDefault() {
+      const w = overlayCanvas.width || 860;
+      const h = overlayCanvas.height || 500;
+      warpPoints[0].x = Math.round(w * 0.08); warpPoints[0].y = Math.round(h * 0.22);
+      warpPoints[1].x = Math.round(w * 0.92); warpPoints[1].y = Math.round(h * 0.18);
+      warpPoints[2].x = Math.round(w * 0.95); warpPoints[2].y = Math.round(h * 0.82);
+      warpPoints[3].x = Math.round(w * 0.05); warpPoints[3].y = Math.round(h * 0.78);
+      saveRoiConfigToLocalStorage();
+      updatePerspectiveMatrix();
+      if (roiSaveStatus) {
+        roiSaveStatus.textContent = '기본값으로 초기화됨';
+        roiSaveStatus.style.color = '#ff9500';
+      }
+    }
+
+    // --- 1-C. 4포인트 마우스 및 모바일 터치 드래그 인터랙션 ---
+    function getCanvasPointFromEvent(evt) {
+      const rect = overlayCanvas.getBoundingClientRect();
+      let clientX = evt.clientX;
+      let clientY = evt.clientY;
+      if (evt.touches && evt.touches.length > 0) {
+        clientX = evt.touches[0].clientX;
+        clientY = evt.touches[0].clientY;
+      } else if (evt.changedTouches && evt.changedTouches.length > 0) {
+        clientX = evt.changedTouches[0].clientX;
+        clientY = evt.changedTouches[0].clientY;
+      }
+      const scaleX = overlayCanvas.width / rect.width;
+      const scaleY = overlayCanvas.height / rect.height;
+      return {
+        x: Math.round((clientX - rect.left) * scaleX),
+        y: Math.round((clientY - rect.top) * scaleY)
+      };
+    }
+
+    function findNearestWarpPointIndex(pt, maxDist = 36) {
+      let bestIdx = -1;
+      let minDist = maxDist;
+      for (let i = 0; i < warpPoints.length; i++) {
+        const dx = warpPoints[i].x - pt.x;
+        const dy = warpPoints[i].y - pt.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDist) {
+          minDist = dist;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    }
+
+    function onWarpDragStart(evt) {
+      if (!isWarpMode) return;
+      const pt = getCanvasPointFromEvent(evt);
+      const idx = findNearestWarpPointIndex(pt, 36);
+      if (idx !== -1) {
+        activeDragPointIdx = idx;
+        overlayCanvas.style.cursor = 'grabbing';
+        evt.preventDefault();
+      }
+    }
+
+    function onWarpDragMove(evt) {
+      if (!isWarpMode) return;
+      const pt = getCanvasPointFromEvent(evt);
+      if (activeDragPointIdx !== -1) {
+        const w = overlayCanvas.width || 860;
+        const h = overlayCanvas.height || 500;
+        warpPoints[activeDragPointIdx].x = Math.max(0, Math.min(w, pt.x));
+        warpPoints[activeDragPointIdx].y = Math.max(0, Math.min(h, pt.y));
+        updatePerspectiveMatrix();
+        evt.preventDefault();
+      } else {
+        const idx = findNearestWarpPointIndex(pt, 36);
+        overlayCanvas.style.cursor = (idx !== -1) ? 'grab' : 'crosshair';
+      }
+    }
+
+    function onWarpDragEnd(evt) {
+      if (activeDragPointIdx !== -1) {
+        activeDragPointIdx = -1;
+        overlayCanvas.style.cursor = 'crosshair';
+        saveRoiConfigToLocalStorage();
+        updatePerspectiveMatrix();
+        if (evt) evt.preventDefault();
+      }
+    }
+
+    overlayCanvas.addEventListener('mousedown', onWarpDragStart);
+    window.addEventListener('mousemove', onWarpDragMove);
+    window.addEventListener('mouseup', onWarpDragEnd);
+
+    overlayCanvas.addEventListener('touchstart', onWarpDragStart, { passive: false });
+    window.addEventListener('touchmove', onWarpDragMove, { passive: false });
+    window.addEventListener('touchend', onWarpDragEnd, { passive: false });
+    window.addEventListener('touchcancel', onWarpDragEnd, { passive: false });
+
+    // 4포인트 보정 모드 토글 버튼
+    btnToggleWarp.onclick = () => {
+      isWarpMode = !isWarpMode;
+      if (isWarpMode) {
+        btnToggleWarp.classList.add('active');
+        btnToggleWarp.textContent = '🎯 4점보정 ON';
+        warpGuideBanner.classList.remove('hidden');
+      } else {
+        btnToggleWarp.classList.remove('active');
+        btnToggleWarp.textContent = '🎯 4점보정 OFF';
+        warpGuideBanner.classList.add('hidden');
+      }
+    };
+
+    btnQuickSaveRoi.onclick = exportRoiConfigJson;
+    btnQuickResetRoi.onclick = resetWarpPointsToDefault;
+    btnExportRoi.onclick = exportRoiConfigJson;
+    btnResetRoi.onclick = resetWarpPointsToDefault;
+    btnImportRoi.onclick = () => fileRoiInput.click();
+    fileRoiInput.onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        importRoiConfigJson(e.target.files[0]);
+      }
+    };
+
+    // --- 1-0. 15x2 총 30개 박스 Bounding Box 매핑 헬퍼 ---
+    function getBoxBoundingBoxes() {
+      const boxes = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const id = r * COLS + c + 1; // 고유 번호: 1 ~ 30
+          const x = gridX + c * (cellW + cellGap);
+          const y = gridY + r * (cellH + cellGap);
+          boxes.push({ id, r, c, x, y, w: cellW, h: cellH });
+        }
+      }
+      return boxes;
+    }
 
     // --- 1-1. 슬라이더 UI 값 동기화 ---
     function syncSettingsSliders() {
@@ -603,17 +986,17 @@
       console.log(`[AutoFit] Layout: ${COLS}x${ROWS}, Cell: ${cellW}x${cellH}, Origin: (${gridX}, ${gridY}) on Canvas ${w}x${h}`);
     }
 
-    // --- 1-3. 격자 방향 전환 (가로 10x3 ⇄ 세로 3x10) 엔진 ---
+    // --- 1-3. 격자 방향 전환 (가로 15x2 ⇄ 세로 2x15) 엔진 ---
     function toggleGridLayout() {
       isVerticalGrid = !isVerticalGrid;
       if (isVerticalGrid) {
-        ROWS = 10;
-        COLS = 3;
-        btnToggleLayout.textContent = '🔀 격자: 3x10(세로)';
+        ROWS = 15;
+        COLS = 2;
+        btnToggleLayout.textContent = '🔀 격자: 2x15(세로)';
       } else {
-        ROWS = 3;
-        COLS = 10;
-        btnToggleLayout.textContent = '🔀 격자: 10x3(가로)';
+        ROWS = 2;
+        COLS = 15;
+        btnToggleLayout.textContent = '🔀 격자: 15x2(가로)';
       }
       if (sampleCellIndex >= ROWS * COLS) {
         sampleCellIndex = 0;
@@ -684,6 +1067,7 @@
       btnCaptureTemplate.disabled = false;
       btnInspectNow.disabled = false;
       btnToggleRun.disabled = false;
+      updatePerspectiveMatrix(); // 4포인트 원근 변환 행렬 초기 생성
     }
     function onOpenCvError() {
       cvText.textContent = 'OpenCV 로드 실패';
@@ -743,17 +1127,17 @@
       if (!hasInitializedLayout) {
         hasInitializedLayout = true;
         if (vpW < vpH) {
-          // 스마트폰 세로 모드: 3열 x 10단 (사용자 스케치 및 세로 뷰포트에 최적화)
+          // 스마트폰 세로 모드: 2열 x 15단 (세로 뷰포트에 최적화)
           isVerticalGrid = true;
-          ROWS = 10;
-          COLS = 3;
-          btnToggleLayout.textContent = '🔀 격자: 3x10(세로)';
+          ROWS = 15;
+          COLS = 2;
+          btnToggleLayout.textContent = '🔀 격자: 2x15(세로)';
         } else {
-          // 가로 모드: 10열 x 3행
+          // 가로 모드: 15열 x 2단 (물리 컨베이어 15x2 배치)
           isVerticalGrid = false;
-          ROWS = 3;
-          COLS = 10;
-          btnToggleLayout.textContent = '🔀 격자: 10x3(가로)';
+          ROWS = 2;
+          COLS = 15;
+          btnToggleLayout.textContent = '🔀 격자: 15x2(가로)';
         }
       }
     }
@@ -831,69 +1215,220 @@
     window.addEventListener('resize', updateVideoWrapperLayout);
     window.addEventListener('orientationchange', () => setTimeout(updateVideoWrapperLayout, 200));
 
-    // --- 6. 가상 컨베이어 시뮬레이션 엔진 ---
-    let simBoxPosX = 30;
-    let simSpeed = 3.5;
-    let simStopTimer = 180;
+    // --- 6. 15x2 현장 물리 공정 가상 시뮬레이터 엔진 ---
+    // (푸셔 1 진입 -> 1초 정지 검사 -> 우측 10개 배출 -> 남은 20개 좌->우 이송 반복)
+    let simBoxes = [];
+    let simPhase = 'ENTER'; // 'ENTER' | 'STOP' | 'PUSH_1' | 'SHIFT_1' | 'PUSH_2' | 'SHIFT_2' | 'PUSH_3' | 'RESET'
+    let simTimer = 0;
     let simHasTiltDefect = true;
 
-    function renderSimulationFrame() {
-      const w = simCanvas.width || 640;
-      const h = simCanvas.height || 480;
-      simCtx.fillStyle = '#181b22';
-      simCtx.fillRect(0, 0, w, h);
-
-      simCtx.strokeStyle = '#272b38';
-      simCtx.lineWidth = 3;
-      simCtx.beginPath();
-      simCtx.moveTo(0, gridY - 20); simCtx.lineTo(w, gridY - 20);
-      simCtx.moveTo(0, gridY + (cellH + cellGap) * ROWS + 20); simCtx.lineTo(w, gridY + (cellH + cellGap) * ROWS + 20);
-      simCtx.stroke();
-
-      const targetStopX = gridX;
-      if (simBoxPosX < targetStopX) {
-        simBoxPosX += simSpeed;
-        if (simBoxPosX >= targetStopX) {
-          simBoxPosX = targetStopX;
-          simStopTimer = 160;
-        }
-      } else if (simStopTimer > 0) {
-        simStopTimer--;
-      } else {
-        simBoxPosX += simSpeed;
-        if (simBoxPosX > w + 100) {
-          simBoxPosX = -((cellW + cellGap) * COLS + 60);
-          simHasTiltDefect = Math.random() > 0.3;
-        }
-      }
+    function initSimBoxes() {
+      simBoxes = [];
+      const colPitch = cellW + cellGap;
+      const initialStartX = -colPitch * 15 - 50;
 
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          const bx = simBoxPosX + c * (cellW + cellGap);
-          const by = gridY + r * (cellH + cellGap);
-          const defectC1 = Math.min(COLS - 1, isVerticalGrid ? 1 : 4);
-          const defectR1 = Math.min(ROWS - 1, isVerticalGrid ? 4 : 1);
-          const defectC2 = Math.min(COLS - 1, isVerticalGrid ? 2 : 7);
-          const defectR2 = Math.min(ROWS - 1, isVerticalGrid ? 7 : 2);
-          const isDefectCell = simHasTiltDefect && ((r === defectR1 && c === defectC1) || (r === defectR2 && c === defectC2));
-
-          if (isDefectCell) {
-            simCtx.fillStyle = '#b58900';
-            simCtx.fillRect(bx, by, cellW, cellH);
-            simCtx.fillStyle = '#d33682';
-            simCtx.fillRect(bx + 4, by + cellH / 2 - 4, cellW - 8, 8);
-          } else {
-            simCtx.fillStyle = '#e4e7eb';
-            simCtx.fillRect(bx, by, cellW, cellH);
-            simCtx.fillStyle = '#268bd2';
-            simCtx.beginPath();
-            simCtx.arc(bx + cellW / 2, by + cellH / 2, Math.min(cellW, cellH) * 0.25, 0, Math.PI * 2);
-            simCtx.fill();
-          }
-          simCtx.strokeStyle = '#555';
-          simCtx.lineWidth = 1;
-          simCtx.strokeRect(bx, by, cellW, cellH);
+          const id = r * COLS + c + 1;
+          const isDefect = simHasTiltDefect && (id === 3 || id === 18);
+          simBoxes.push({
+            id,
+            r,
+            c,
+            group: Math.floor(c / 5), // 0: 1~5열, 1: 6~10열, 2: 11~15열
+            x: initialStartX + c * colPitch,
+            y: gridY + r * (cellH + cellGap),
+            targetX: gridX + c * colPitch,
+            isDefect,
+            isDischarged: false,
+            opacity: 1.0
+          });
         }
+      }
+    }
+
+    function renderSimulationFrame() {
+      const w = simCanvas.width || 860;
+      const h = simCanvas.height || 500;
+      simCtx.fillStyle = '#181b22';
+      simCtx.fillRect(0, 0, w, h);
+
+      // 컨베이어 가이드 레일
+      simCtx.strokeStyle = '#272b38';
+      simCtx.lineWidth = 3;
+      simCtx.beginPath();
+      simCtx.moveTo(0, gridY - 12); simCtx.lineTo(w, gridY - 12);
+      simCtx.moveTo(0, gridY + (cellH + cellGap) * ROWS + 12); simCtx.lineTo(w, gridY + (cellH + cellGap) * ROWS + 12);
+      simCtx.stroke();
+
+      // 우측 배출 푸셔 영역 시각화 (11~15열 끝단 10개 구역)
+      const pusherX = gridX + 10 * (cellW + cellGap);
+      const pusherW = 5 * (cellW + cellGap) - cellGap;
+      simCtx.fillStyle = 'rgba(255, 149, 0, 0.08)';
+      simCtx.fillRect(pusherX, gridY - 8, pusherW, (cellH + cellGap) * ROWS + 16);
+      simCtx.strokeStyle = 'rgba(255, 149, 0, 0.35)';
+      simCtx.setLineDash([3, 3]);
+      simCtx.strokeRect(pusherX, gridY - 8, pusherW, (cellH + cellGap) * ROWS + 16);
+      simCtx.setLineDash([]);
+
+      const colPitch = cellW + cellGap;
+
+      if (!simBoxes || simBoxes.length === 0) {
+        initSimBoxes();
+      }
+
+      // 공정 시뮬레이션 상태 머신 (실제 속도 60% 수준 반영)
+      if (simPhase === 'ENTER') {
+        let allReached = true;
+        for (const b of simBoxes) {
+          if (b.x < b.targetX) {
+            b.x += 4.5; // 푸셔 1 빠른 진입 속도 복원 (원래 빠른 속도)
+            if (b.x >= b.targetX) b.x = b.targetX;
+            else allReached = false;
+          }
+        }
+        if (allReached) {
+          simPhase = 'STOP';
+          simTimer = 65; // 약 1.0초간 정지 유지 (0.8초 검사 포착)
+        }
+      } else if (simPhase === 'STOP') {
+        simTimer--;
+        if (simTimer <= 0) {
+          // 1단계: 우측 끝 10개(그룹 2, 11~15열) 푸셔 2 배출 시작 (실제 현장 템포)
+          simPhase = 'PUSH_1';
+          simTimer = 108; // 65 / 0.6
+        }
+      } else if (simPhase === 'PUSH_1') {
+        for (const b of simBoxes) {
+          if (b.group === 2 && !b.isDischarged) {
+            b.y -= 4.2; // 7.0 * 0.6 (상단/뒤쪽 배출 푸시)
+            b.opacity = Math.max(0, b.opacity - 0.010); // 0.016 * 0.6
+          }
+        }
+        simTimer--;
+        if (simTimer <= 0) {
+          for (const b of simBoxes) {
+            if (b.group === 2) {
+              b.isDischarged = true;
+              b.opacity = 0;
+            }
+            // 남은 20개(그룹 0, 1)의 다음 목표 X 좌표를 우측으로 5열만큼 전진 설정
+            if (!b.isDischarged) {
+              b.targetX += 5 * colPitch;
+            }
+          }
+          simPhase = 'SHIFT_1'; // 남은 20개 좌 -> 우 이송 시작
+        }
+      } else if (simPhase === 'SHIFT_1') {
+        let allShifted = true;
+        for (const b of simBoxes) {
+          if (!b.isDischarged) {
+            if (b.x < b.targetX) {
+              b.x += 1.8; // 3.0 * 0.6
+              if (b.x >= b.targetX) b.x = b.targetX;
+              else allShifted = false;
+            }
+          }
+        }
+        if (allShifted) {
+          simPhase = 'PUSH_2'; // 새로 우측 끝단에 위치한 10개(그룹 1) 배출 시작
+          simTimer = 108;
+        }
+      } else if (simPhase === 'PUSH_2') {
+        for (const b of simBoxes) {
+          if (b.group === 1 && !b.isDischarged) {
+            b.y -= 4.2; // 상단/뒤쪽으로 배출 푸시
+            b.opacity = Math.max(0, b.opacity - 0.010);
+          }
+        }
+        simTimer--;
+        if (simTimer <= 0) {
+          for (const b of simBoxes) {
+            if (b.group === 1) {
+              b.isDischarged = true;
+              b.opacity = 0;
+            }
+            // 남은 10개(그룹 0)의 다음 목표 X 좌표를 다시 우측으로 5열만큼 전진 설정
+            if (!b.isDischarged) {
+              b.targetX += 5 * colPitch;
+            }
+          }
+          simPhase = 'SHIFT_2'; // 남은 10개 좌 -> 우 이송 시작
+        }
+      } else if (simPhase === 'SHIFT_2') {
+        let allShifted = true;
+        for (const b of simBoxes) {
+          if (!b.isDischarged) {
+            if (b.x < b.targetX) {
+              b.x += 1.8; // 3.0 * 0.6
+              if (b.x >= b.targetX) b.x = b.targetX;
+              else allShifted = false;
+            }
+          }
+        }
+        if (allShifted) {
+          simPhase = 'PUSH_3'; // 마지막 10개(그룹 0) 배출 시작
+          simTimer = 108;
+        }
+      } else if (simPhase === 'PUSH_3') {
+        for (const b of simBoxes) {
+          if (b.group === 0 && !b.isDischarged) {
+            b.y -= 4.2; // 상단/뒤쪽으로 배출 푸시
+            b.opacity = Math.max(0, b.opacity - 0.010);
+          }
+        }
+        simTimer--;
+        if (simTimer <= 0) {
+          for (const b of simBoxes) {
+            if (b.group === 0) {
+              b.isDischarged = true;
+              b.opacity = 0;
+            }
+          }
+          simPhase = 'RESET';
+          simTimer = 50; // 30 / 0.6 (빈 작업대 대기)
+        }
+      } else if (simPhase === 'RESET') {
+        simTimer--;
+        if (simTimer <= 0) {
+          simHasTiltDefect = (Math.random() > 0.25);
+          initSimBoxes();
+          simPhase = 'ENTER';
+        }
+      }
+
+      // 박스 렌더링 (★ 배출 완료되었거나 투명화된 박스는 완전히 렌더링 제외!)
+      for (const b of simBoxes) {
+        if (b.isDischarged || b.opacity <= 0 || b.y < -cellH) continue;
+
+        const bx = b.x;
+        const by = b.y;
+
+        simCtx.save();
+        if (b.opacity < 1.0) {
+          simCtx.globalAlpha = Math.max(0, b.opacity);
+        }
+
+        if (b.isDefect) {
+          // 전도(누운) 박스: 비정상 색상 및 바코드 패턴
+          simCtx.fillStyle = '#b58900';
+          simCtx.fillRect(bx, by, cellW, cellH);
+          simCtx.fillStyle = '#d33682';
+          simCtx.fillRect(bx + 4, by + cellH / 2 - 6, cellW - 8, 12);
+        } else {
+          // 정상 기립 박스: 표준 톤 및 중앙 캡
+          simCtx.fillStyle = '#e4e7eb';
+          simCtx.fillRect(bx, by, cellW, cellH);
+          simCtx.fillStyle = '#268bd2';
+          simCtx.beginPath();
+          simCtx.arc(bx + cellW / 2, by + cellH / 2, Math.min(cellW, cellH) * 0.25, 0, Math.PI * 2);
+          simCtx.fill();
+        }
+
+        simCtx.strokeStyle = '#444';
+        simCtx.lineWidth = 1;
+        simCtx.strokeRect(bx, by, cellW, cellH);
+        simCtx.restore();
       }
     }
 
@@ -951,13 +1486,46 @@
 
       const r = Math.floor(sampleCellIndex / COLS);
       const c = sampleCellIndex % COLS;
-      const x = gridX + c * (cellW + cellGap);
-      const y = gridY + r * (cellH + cellGap);
+      let cellData = null;
+      let templateW = cellW, templateH = cellH;
 
-      const cellData = srcCanvas.getContext('2d').getImageData(x, y, cellW, cellH);
+      if (isWarpMode && perspectiveM) {
+        // 4포인트 원근 보정 모드: 600x160 평면으로 왜곡을 편 후 샘플 셀(40x80) 크롭
+        const sw = srcCanvas.width || 860;
+        const sh = srcCanvas.height || 500;
+        const srcCtx = srcCanvas.getContext('2d');
+        const frameImgData = srcCtx.getImageData(0, 0, sw, sh);
+        let srcMat = null, warpedMat = null;
+        try {
+          srcMat = cv.matFromImageData(frameImgData);
+          warpedMat = new cv.Mat();
+          cv.warpPerspective(srcMat, warpedMat, perspectiveM, new cv.Size(WARP_OUTPUT_W, WARP_OUTPUT_H));
+          cv.imshow(warpCanvas, warpedMat);
 
-      thumbCanvas.width = cellW;
-      thumbCanvas.height = cellH;
+          templateW = Math.floor(WARP_OUTPUT_W / COLS); // 40px
+          templateH = Math.floor(WARP_OUTPUT_H / ROWS); // 80px
+          const cx = c * templateW;
+          const cy = r * templateH;
+          cellData = warpCtx.getImageData(cx, cy, templateW, templateH);
+        } catch (err) {
+          console.warn('[captureTemplate] 원근 보정 템플릿 크롭 실패, 일반 모드로 대체:', err);
+        } finally {
+          if (srcMat) srcMat.delete();
+          if (warpedMat) warpedMat.delete();
+        }
+      }
+
+      // 일반 AABB 모드 폴백
+      if (!cellData) {
+        const x = gridX + c * (cellW + cellGap);
+        const y = gridY + r * (cellH + cellGap);
+        cellData = srcCanvas.getContext('2d').getImageData(x, y, cellW, cellH);
+        templateW = cellW;
+        templateH = cellH;
+      }
+
+      thumbCanvas.width = templateW;
+      thumbCanvas.height = templateH;
       thumbCtx.putImageData(cellData, 0, 0);
       thumbStatus.textContent = `${r+1}행${c+1}열 등록됨`;
       thumbStatus.style.color = '#34c759';
@@ -971,7 +1539,7 @@
         normalTemplateMat = new cv.Mat();
         cv.cvtColor(fullMat, normalTemplateMat, cv.COLOR_RGBA2GRAY);
         fullMat.delete();
-        console.log('템플릿 등록 완료:', cellW, cellH);
+        console.log('템플릿 등록 완료:', templateW, templateH, isWarpMode ? '(Warp 평면)' : '(AABB)');
       } catch (err) {
         console.error('템플릿 생성 실패:', err);
       }
@@ -1013,17 +1581,12 @@
       isRunning = true;
       state = 'WAIT_ARRIVAL';
       stableStopCount = 0;
+      stopCheckStartTime = null;
+      cooldownStartTime = null;
       prevTriggerPixels = null;
       btnToggleRun.classList.add('running');
       btnToggleRun.textContent = '⏹️ 감시 정지';
       updateStateBadge('WAIT_ARRIVAL', '박스 도착 대기', '#00ffcc');
-
-      setTimeout(() => {
-        if (isRunning && (state === 'WAIT_ARRIVAL' || state === 'CHECK_STOP')) {
-          const srcCanvas = getCurrentFrameCanvas();
-          if (srcCanvas) runOneShotInspection(srcCanvas);
-        }
-      }, 400);
     }
 
     function stopRunning() {
@@ -1073,52 +1636,186 @@
       return { motion, rx, ry, roiW, roiH, currentData: data };
     }
 
-    // --- 10. 30개 셀 OpenCV 매칭 엔진 (cv.Mat 완벽 수거) ---
-    function inspectAll30Cells(srcCanvas) {
-      if (!normalTemplateMat || !isOpenCvReady) return null;
+    // --- 10. [향후 코랩 모델 장착 슬롯: inspect_single_box] ---
+    /**
+     * 개별 소박스 1개의 크롭 이미지를 받아 전도(누움) 여부를 판별하는 추상화 함수.
+     * 
+     * @param {ImageData|HTMLCanvasElement} boxCropImg - 15x2 중 개별 상자 1개의 크롭 이미지 데이터
+     * @param {Object} boxMeta - { id: 1~30, r: 0~1, c: 0~14, x, y, w, h }
+     * @returns {Promise<{ isToppled: boolean, score: number, label: string }>}
+     *          isToppled: True(전도 불량), False(정상)
+     * 
+     * [코랩 AI 모델 장착 가이드]
+     * 3단계/4단계에서 구글 코랩에서 학습된 AI 모델(ONNX runtime web, TF.js, 또는 Flask REST 추론)로
+     * 아래 TODO 블록에 추론 코드를 작성하면 전체 파이프라인과 플러그앤플레이(Plug & Play) 형태로 즉시 연동됩니다.
+     */
+    async function inspect_single_box(boxCropImg, boxMeta) {
+      /*
+       * ==============================================================
+       * [TODO: 3단계 / 4단계 코랩 모델 교체 영역]
+       * 예시:
+       *   const tensor = preprocess(boxCropImg);
+       *   const pred = await colabModel.run(tensor);
+       *   const isToppled = pred.is_toppled; // true: 전도 불량, false: 정상
+       *   return { isToppled, score: pred.confidence, label: isToppled ? 'TOPPLED' : 'NORMAL' };
+       * ==============================================================
+       */
 
-      const defects = [];
-      const scores = [];
-      const srcCtx = srcCanvas.getContext('2d');
+      // [키보드 't' 단축키 시뮬레이션용: 특정 박스(기본 3번 박스) 전도 강제 트리거 지원]
+      if (window.__testForceToppledBoxId && boxMeta.id === window.__testForceToppledBoxId) {
+        return { isToppled: true, score: 0.32, label: 'TOPPLED (Test Trigger)' };
+      }
 
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cx = gridX + c * (cellW + cellGap);
-          const cy = gridY + r * (cellH + cellGap);
+      // [1단계 파이프라인 구현체: 기존 OpenCV 템플릿 매칭 엔진]
+      if (isOpenCvReady && normalTemplateMat && (boxCropImg instanceof ImageData)) {
+        let cellMat = null, cellGray = null, resultMat = null;
+        try {
+          cellMat = cv.matFromImageData(boxCropImg);
+          cellGray = new cv.Mat();
+          cv.cvtColor(cellMat, cellGray, cv.COLOR_RGBA2GRAY);
 
-          const cellImgData = srcCtx.getImageData(cx, cy, cellW, cellH);
+          resultMat = new cv.Mat();
+          cv.matchTemplate(cellGray, normalTemplateMat, resultMat, cv.TM_CCOEFF_NORMED);
 
-          let cellMat = null;
-          let cellGray = null;
-          let resultMat = null;
+          const minMax = cv.minMaxLoc(resultMat);
+          const score = minMax.maxVal;
+          const isToppled = (score < matchThreshold);
 
-          try {
-            cellMat = cv.matFromImageData(cellImgData);
-            cellGray = new cv.Mat();
-            cv.cvtColor(cellMat, cellGray, cv.COLOR_RGBA2GRAY);
-
-            resultMat = new cv.Mat();
-            cv.matchTemplate(cellGray, normalTemplateMat, resultMat, cv.TM_CCOEFF_NORMED);
-
-            const minMax = cv.minMaxLoc(resultMat);
-            const score = minMax.maxVal;
-            scores.push({ r, c, score, x: cx, y: cy });
-
-            if (score < matchThreshold) {
-              defects.push({ r: r + 1, c: c + 1, score, x: cx, y: cy });
-            }
-          } catch (err) {
-            console.error(`Cell (${r},${c}) 매칭 에러:`, err);
-          } finally {
-            if (cellMat) cellMat.delete();
-            if (cellGray) cellGray.delete();
-            if (resultMat) resultMat.delete();
-          }
+          return {
+            isToppled,
+            score: parseFloat(score.toFixed(3)),
+            label: isToppled ? 'TOPPLED (전도)' : 'NORMAL (정상)'
+          };
+        } catch (err) {
+          console.warn(`[inspect_single_box] 박스 #${boxMeta.id} 판별 에러:`, err);
+          return { isToppled: false, score: 1.0, label: 'ERROR' };
+        } finally {
+          if (cellMat) cellMat.delete();
+          if (cellGray) cellGray.delete();
+          if (resultMat) resultMat.delete();
         }
       }
 
-      const minScore = scores.reduce((min, s) => Math.min(min, s.score), 1.0);
-      return { defects, scores, minScore };
+      // 템플릿 미등록 시 기본 정상(False) 더미 반환
+      return { isToppled: false, score: 1.0, label: 'NORMAL (Dummy)' };
+    }
+    window.inspect_single_box = inspect_single_box;
+
+    // --- 10-1. 15x2 총 30개 박스 순회 및 inspect_single_box 호출 엔진 ---
+    async function inspectAll30Cells(srcCanvas) {
+      const defects = [];
+      const scores = [];
+
+      // [1] 4포인트 원근 왜곡 보정 (Perspective Warp) 정규화 검사 모드
+      if (isWarpMode && isOpenCvReady && perspectiveM) {
+        const sw = srcCanvas.width || 860;
+        const sh = srcCanvas.height || 500;
+        const srcCtx = srcCanvas.getContext('2d');
+        const frameImgData = srcCtx.getImageData(0, 0, sw, sh);
+        let srcMat = null, warpedMat = null;
+
+        try {
+          srcMat = cv.matFromImageData(frameImgData);
+          warpedMat = new cv.Mat();
+          cv.warpPerspective(srcMat, warpedMat, perspectiveM, new cv.Size(WARP_OUTPUT_W, WARP_OUTPUT_H));
+          cv.imshow(warpCanvas, warpedMat);
+
+          const cellW_warp = Math.floor(WARP_OUTPUT_W / COLS); // 40px
+          const cellH_warp = Math.floor(WARP_OUTPUT_H / ROWS); // 80px
+
+          for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+              const id = r * COLS + c + 1;
+              const cx = c * cellW_warp;
+              const cy = r * cellH_warp;
+              const cellImgData = warpCtx.getImageData(cx, cy, cellW_warp, cellH_warp);
+
+              // 카메라 원본 화면상의 중심점 좌표 매핑
+              const centerPt = getInterpolatedPoint((c + 0.5) / COLS, (r + 0.5) / ROWS);
+              const boxMeta = {
+                id,
+                r,
+                c,
+                x: Math.round(centerPt.x),
+                y: Math.round(centerPt.y),
+                w: cellW_warp,
+                h: cellH_warp,
+                isWarp: true
+              };
+
+              const result = await inspect_single_box(cellImgData, boxMeta);
+              scores.push({
+                id,
+                r,
+                c,
+                x: centerPt.x,
+                y: centerPt.y,
+                score: result.score,
+                isToppled: result.isToppled,
+                label: result.label
+              });
+
+              if (result.isToppled) {
+                defects.push({
+                  id,
+                  r: r + 1,
+                  c: c + 1,
+                  score: result.score,
+                  x: centerPt.x,
+                  y: centerPt.y,
+                  label: result.label
+                });
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('[inspectAll30Cells] 원근 보정 검사 예외 발생, 일반 모드로 전환:', err);
+        } finally {
+          if (srcMat) srcMat.delete();
+          if (warpedMat) warpedMat.delete();
+        }
+
+        if (scores.length > 0) {
+          const minScore = scores.reduce((min, s) => Math.min(min, s.score), 1.0);
+          return { defects, scores, minScore, totalBoxes: ROWS * COLS, isWarp: true };
+        }
+      }
+
+      // [2] 일반 AABB 직교 그리드 검사 모드 (폴백)
+      const boxes = getBoxBoundingBoxes();
+      if (!boxes || boxes.length === 0) return null;
+      const srcCtx = srcCanvas.getContext('2d');
+
+      for (const box of boxes) {
+        const cellImgData = srcCtx.getImageData(box.x, box.y, box.w, box.h);
+        const result = await inspect_single_box(cellImgData, box);
+
+        scores.push({
+          id: box.id,
+          r: box.r,
+          c: box.c,
+          x: box.x,
+          y: box.y,
+          score: result.score,
+          isToppled: result.isToppled,
+          label: result.label
+        });
+
+        if (result.isToppled) {
+          defects.push({
+            id: box.id,
+            r: box.r + 1,
+            c: box.c + 1,
+            score: result.score,
+            x: box.x,
+            y: box.y,
+            label: result.label
+          });
+        }
+      }
+
+      const minScore = scores.length > 0 ? scores.reduce((min, s) => Math.min(min, s.score), 1.0) : 1.0;
+      return { defects, scores, minScore, totalBoxes: boxes.length, isWarp: false };
     }
 
     // --- 11. 메인 프로세싱 & 렌더링 루프 ---
@@ -1153,48 +1850,82 @@
       animationFrameId = requestAnimationFrame(processLoop);
     }
 
+    // --- 11-1. 모션 정지 감지 상태 머신 (0.8초 정지 포착 & 3.0초 쿨다운 락) ---
     function handleStateMachine(motion, srcCanvas) {
+      const now = performance.now();
+
       switch (state) {
         case 'WAIT_ARRIVAL':
+          // 푸셔 1이 15x2 박스 묶음을 밀어 넣으며 큰 모션 발생
           if (motion > stopThreshold * 1.5) {
-            stableStopCount = 0;
-            updateStateBadge('CHECK_STOP', '정지 대기중...', '#ffcc00');
+            stopCheckStartTime = null;
+            updateStateBadge('CHECK_STOP', '진입 모션 감지 → 정지 대기중...', '#ffcc00');
           }
           break;
 
         case 'CHECK_STOP':
+          // 물리 공정: 푸셔 2가 움직이기 직전 약 0.5초 ~ 1.0초간 정지 유지
           if (motion <= stopThreshold) {
-            stableStopCount++;
-            if (stableStopCount >= 4) {
-              updateStateBadge('INSPECT_ONESHOT', '원샷 검사중...', '#af52de');
-              setTimeout(() => {
-                runOneShotInspection(srcCanvas);
-              }, 40);
+            if (!stopCheckStartTime) {
+              stopCheckStartTime = now;
+            }
+            const stopElapsed = now - stopCheckStartTime;
+            const progress = Math.min(100, Math.floor((stopElapsed / STOP_STABLE_DURATION) * 100));
+            updateStateBadge('CHECK_STOP', `정지 감지중 (${progress}% - ${(stopElapsed / 1000).toFixed(1)}s)`, '#ffcc00');
+
+            // 약 0.8초(800ms) 동안 지속 정지 확인 시 검사 실행
+            if (stopElapsed >= STOP_STABLE_DURATION) {
+              stopCheckStartTime = null;
+              updateStateBadge('INSPECT_ONESHOT', '⚡ 정지 포착! 원샷 전도 검사 실행', '#af52de');
+              runOneShotInspection(srcCanvas);
             }
           } else {
-            stableStopCount = Math.max(0, stableStopCount - 1);
+            // 움직임(덜컹거림)이 아직 있으면 정지 타이머 리셋
+            stopCheckStartTime = null;
+            updateStateBadge('CHECK_STOP', '안정화 대기중...', '#ff9500');
           }
           break;
 
         case 'INSPECT_ONESHOT':
+          // 검사 실행 중 (runOneShotInspection 비동기 처리 중)
+          break;
+
+        case 'COOLDOWN_LOCK':
+          // 푸셔 2가 앞에서 뒤(직교 방향)로 10개(5열x2단)씩 3번에 걸쳐 "딱-딱-딱" 배출하는 과정
+          // 덜컹거림 및 중간 멈춤에 의한 오탐/재검사를 방지하기 위해 최소 3.0초간 쿨다운 락 적용
+          if (!cooldownStartTime) {
+            cooldownStartTime = now;
+          }
+          const cdElapsed = now - cooldownStartTime;
+          const remainSec = Math.max(0, ((COOLDOWN_LOCK_DURATION - cdElapsed) / 1000)).toFixed(1);
+          updateStateBadge('COOLDOWN_LOCK', `🔒 배출 쿨다운 락 (${remainSec}s)`, '#ff9500');
+
+          if (cdElapsed >= COOLDOWN_LOCK_DURATION) {
+            cooldownStartTime = null;
+            updateStateBadge('WAIT_DEPARTURE', '배출 완료 대기중', '#00ffcc');
+          }
           break;
 
         case 'WAIT_DEPARTURE':
-          if (motion > stopThreshold * 2.0) {
-            stableStopCount = 0;
-          } else if (stableStopCount > 20 && motion < stopThreshold) {
+          // 30개가 완전히 배출되어 작업대가 비워졌는지 확인 (모션 안정화 후 대기 상태 복귀)
+          if (motion < stopThreshold) {
             lastInspectionResults = null;
-            updateStateBadge('WAIT_ARRIVAL', '다음 박스 대기', '#00ffcc');
+            updateStateBadge('WAIT_ARRIVAL', '다음 15x2 박스 도착 대기', '#00ffcc');
           }
-          stableStopCount++;
           break;
       }
     }
 
-    function runOneShotInspection(srcCanvas) {
-      const result = inspectAll30Cells(srcCanvas);
+    // --- 11-2. 원샷 전도 검사 실행 및 3초 쿨다운 락 진입 ---
+    async function runOneShotInspection(srcCanvas) {
+      if (state !== 'INSPECT_ONESHOT') {
+        state = 'INSPECT_ONESHOT';
+      }
+
+      const result = await inspectAll30Cells(srcCanvas);
       if (!result) {
-        updateStateBadge('WAIT_DEPARTURE', '검사 오류 (미등록)', '#ff3b30');
+        updateStateBadge('COOLDOWN_LOCK', '검사 오류 → 쿨다운 진입', '#ff3b30');
+        cooldownStartTime = performance.now();
         return;
       }
 
@@ -1206,11 +1937,14 @@
         txtInspectResult.style.color = '#ff3b30';
         triggerAlarm(result.defects);
       } else {
-        txtInspectResult.textContent = '전체 정상 (PASS)';
+        txtInspectResult.textContent = '30개 전체 정상 (PASS)';
         txtInspectResult.style.color = '#34c759';
       }
 
-      updateStateBadge('WAIT_DEPARTURE', '검사 완료 (출발 대기)', '#ff9500');
+      // ★ 검사 완료 즉시 푸셔 2 배출 쿨다운 락(3초) 상태로 전환!
+      state = 'COOLDOWN_LOCK';
+      cooldownStartTime = performance.now();
+      updateStateBadge('COOLDOWN_LOCK', '🔒 배출 쿨다운 락 (3.0s)', '#ff9500');
     }
 
     function triggerAlarm(defects) {
@@ -1225,8 +1959,130 @@
       alarmBanner.style.display = 'none';
     };
 
-    // --- 12. 그리드 오버레이 렌더링 ---
+    // --- 12. 그리드 오버레이 렌더링 (4포인트 원근 보정 및 AABB 듀얼 렌더러) ---
     function renderGridOverlay() {
+      if (isWarpMode) {
+        // [1] 사다리꼴 전체 외곽 폴리곤 배경 채우기 및 윤곽선
+        const p0 = warpPoints[0], p1 = warpPoints[1], p2 = warpPoints[2], p3 = warpPoints[3];
+        overlayCtx.save();
+        overlayCtx.beginPath();
+        overlayCtx.moveTo(p0.x, p0.y);
+        overlayCtx.lineTo(p1.x, p1.y);
+        overlayCtx.lineTo(p2.x, p2.y);
+        overlayCtx.lineTo(p3.x, p3.y);
+        overlayCtx.closePath();
+        overlayCtx.fillStyle = 'rgba(0, 229, 255, 0.04)';
+        overlayCtx.fill();
+        overlayCtx.strokeStyle = 'rgba(0, 229, 255, 0.85)';
+        overlayCtx.lineWidth = 2;
+        overlayCtx.stroke();
+        overlayCtx.restore();
+
+        // [2] 15x2 각 셀(총 30개)의 사각 폴리곤 보간 렌더링
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cellIndex = r * COLS + c;
+            const u0 = c / COLS, u1 = (c + 1) / COLS;
+            const v0 = r / ROWS, v1 = (r + 1) / ROWS;
+
+            const q0 = getInterpolatedPoint(u0, v0); // TL
+            const q1 = getInterpolatedPoint(u1, v0); // TR
+            const q2 = getInterpolatedPoint(u1, v1); // BR
+            const q3 = getInterpolatedPoint(u0, v1); // BL
+            const qCenter = getInterpolatedPoint((u0 + u1) / 2, (v0 + v1) / 2);
+
+            let strokeColor = 'rgba(0, 229, 255, 0.35)';
+            let fillColor = 'transparent';
+            let textColor = 'rgba(255, 255, 255, 0.75)';
+            let scoreText = '';
+
+            if (lastInspectionResults) {
+              const defect = lastInspectionResults.defects.find(d => d.r === (r + 1) && d.c === (c + 1));
+              const scoreItem = lastInspectionResults.scores.find(s => s.r === r && s.c === c);
+
+              if (defect) {
+                strokeColor = '#ff3b30';
+                fillColor = 'rgba(255, 59, 48, 0.45)';
+                textColor = '#ff3b30';
+                scoreText = `${(defect.score * 100).toFixed(0)}%`;
+              } else {
+                strokeColor = '#34c759';
+                fillColor = 'rgba(52, 199, 89, 0.12)';
+                textColor = '#34c759';
+                if (scoreItem) scoreText = `${(scoreItem.score * 100).toFixed(0)}%`;
+              }
+            } else if (cellIndex === sampleCellIndex) {
+              strokeColor = '#ff9500';
+              fillColor = 'rgba(255, 149, 0, 0.25)';
+              textColor = '#ff9500';
+              scoreText = '기준';
+            }
+
+            // 셀 사각 폴리곤 렌더링
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(q0.x, q0.y);
+            overlayCtx.lineTo(q1.x, q1.y);
+            overlayCtx.lineTo(q2.x, q2.y);
+            overlayCtx.lineTo(q3.x, q3.y);
+            overlayCtx.closePath();
+
+            if (fillColor !== 'transparent') {
+              overlayCtx.fillStyle = fillColor;
+              overlayCtx.fill();
+            }
+
+            overlayCtx.strokeStyle = strokeColor;
+            overlayCtx.lineWidth = (strokeColor === '#ff3b30') ? 2.5 : 1.2;
+            overlayCtx.stroke();
+
+            // 셀 번호(#1 ~ #30) 및 스코어 표기
+            overlayCtx.fillStyle = textColor;
+            overlayCtx.font = 'bold 9px monospace';
+            overlayCtx.textAlign = 'center';
+            overlayCtx.textBaseline = 'middle';
+            overlayCtx.fillText(`#${cellIndex + 1}`, qCenter.x, qCenter.y - (scoreText ? 5 : 0));
+
+            if (scoreText) {
+              overlayCtx.font = 'bold 8px monospace';
+              overlayCtx.fillText(scoreText, qCenter.x, qCenter.y + 7);
+            }
+          }
+        }
+
+        // [3] 4개 제어점(Control Points) 드래그 핸들 렌더링
+        for (let i = 0; i < warpPoints.length; i++) {
+          const pt = warpPoints[i];
+          const isDragging = (activeDragPointIdx === i);
+
+          overlayCtx.save();
+          // 외부 글로우 링
+          overlayCtx.beginPath();
+          overlayCtx.arc(pt.x, pt.y, isDragging ? 20 : 16, 0, Math.PI * 2);
+          overlayCtx.fillStyle = isDragging ? 'rgba(255, 204, 0, 0.35)' : 'rgba(0, 229, 255, 0.25)';
+          overlayCtx.fill();
+          overlayCtx.strokeStyle = isDragging ? '#ffcc00' : '#00e5ff';
+          overlayCtx.lineWidth = isDragging ? 3 : 2;
+          overlayCtx.stroke();
+
+          // 내부 중심 코어
+          overlayCtx.beginPath();
+          overlayCtx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+          overlayCtx.fillStyle = isDragging ? '#ffcc00' : '#fff';
+          overlayCtx.fill();
+
+          // 핸들 번호 배지 ①, ②, ③, ④
+          overlayCtx.fillStyle = isDragging ? '#ffcc00' : '#00e5ff';
+          overlayCtx.font = 'bold 11px sans-serif';
+          overlayCtx.textAlign = 'center';
+          overlayCtx.textBaseline = 'bottom';
+          overlayCtx.fillText(`${i + 1}:${pt.label}`, pt.x, pt.y - 18);
+          overlayCtx.restore();
+        }
+
+        return;
+      }
+
+      // [기존 AABB 직교 그리드 모드 폴백]
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const x = gridX + c * (cellW + cellGap);
@@ -1271,21 +2127,36 @@
 
           overlayCtx.fillStyle = textColor;
           overlayCtx.font = 'bold 9px monospace';
-          overlayCtx.fillText(`${r+1}-${c+1}`, x + 3, y + 10);
+          overlayCtx.textAlign = 'left';
+          overlayCtx.textBaseline = 'top';
+          overlayCtx.fillText(`#${cellIndex + 1}`, x + 2, y + 2);
 
           if (scoreText) {
-            overlayCtx.font = 'bold 10px monospace';
-            overlayCtx.fillText(scoreText, x + 3, y + cellH - 4);
+            overlayCtx.font = 'bold 8.5px monospace';
+            overlayCtx.fillText(scoreText, x + 2, y + cellH - 12);
           }
         }
       }
     }
 
-    // --- 초기 기동 ---
+    // --- 초기 기동 및 키보드 테스트 단축키 ---
     window.addEventListener('DOMContentLoaded', () => {
       initCamera();
+      loadRoiConfig(); // 저장된 4포인트 ROI 설정 자동 복원
       updateVideoWrapperLayout();
       processLoop();
+    });
+
+    // 키보드 't' 또는 'T' 단축키: 3번 박스 전도 불량 강제 테스트 시뮬레이션
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 't' || e.key === 'T') {
+        window.__testForceToppledBoxId = 3;
+        console.log('[Test Mode] 3번 박스(1행 3열) 전도 불량 테스트 트리거 활성화');
+        const srcCanvas = getCurrentFrameCanvas();
+        if (srcCanvas) {
+          runOneShotInspection(srcCanvas);
+        }
+      }
     });
   </script>
 </body>
