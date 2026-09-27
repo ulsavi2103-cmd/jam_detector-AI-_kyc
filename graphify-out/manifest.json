@@ -1,8 +1,8 @@
 {
   "docs/04_qa_evidence/qa_feature1_2_summary.json": {
-    "mtime": 1790498585.1780748,
-    "seen": 1790498619.5882,
-    "ast_hash": "680e6a84cce783ca0087fe7042272c81",
+    "mtime": 1790501493.3913183,
+    "seen": 1790501555.4984162,
+    "ast_hash": "a6c7cb055837f93730d989e0377c5018",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/qa_summary.json": {
@@ -18,9 +18,9 @@
     "semantic_hash": ""
   },
   "run_gate3_qa_feature1_2.py": {
-    "mtime": 1790496707.9051383,
-    "seen": 1790496763.3155997,
-    "ast_hash": "ee4d8843b249a0abc8a0c1dfc8a0d00b",
+    "mtime": 1790501484.8878481,
+    "seen": 1790501555.4984162,
+    "ast_hash": "65d0b369b133ac728ee71a8c29ad9525",
     "semantic_hash": ""
   },
   "test_simulation.py": {
@@ -48,9 +48,9 @@
     "semantic_hash": ""
   },
   ".agents/rules/rules.md": {
-    "mtime": 1790155604.4509368,
-    "seen": 1790496763.3155997,
-    "ast_hash": "cf06feb9dac4fff06ae5c15b5fe75c28",
+    "mtime": 1790501015.228306,
+    "seen": 1790501555.4984162,
+    "ast_hash": "24df1735411d93f688020bfff7815ced",
     "semantic_hash": ""
   },
   "TASK_AI_VISION_UPGRADE.md": {
@@ -66,39 +66,39 @@
     "semantic_hash": ""
   },
   "color.html": {
-    "mtime": 1790498553.3350332,
-    "seen": 1790498619.5882,
-    "ast_hash": "dae3f4c8814b3800ef80e36f48339243",
+    "mtime": 1790501447.0811875,
+    "seen": 1790501555.4984162,
+    "ast_hash": "d2323b5f5653df39501a5c6b3e65ec28",
     "semantic_hash": ""
   },
   "docs/01_request_spec.md": {
-    "mtime": 1790498521.8467007,
-    "seen": 1790498619.5882,
-    "ast_hash": "d581a54a115d2f75027f915014848078",
+    "mtime": 1790501189.1941552,
+    "seen": 1790501555.4984162,
+    "ast_hash": "bd646258598814466e61c89cf0e3aadd",
     "semantic_hash": ""
   },
   "docs/02_todo.md": {
-    "mtime": 1790498599.3449955,
-    "seen": 1790498619.5882,
-    "ast_hash": "8d349c7be51ebbab6e45a38ad8186383",
+    "mtime": 1790501549.874319,
+    "seen": 1790501555.4984162,
+    "ast_hash": "667f63680a3c35e51fe5de456e459a6f",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate1_review.md": {
-    "mtime": 1790498533.3515637,
-    "seen": 1790498619.5882,
-    "ast_hash": "bcf4d9a20fb475935c0a41c0f9b02434",
+    "mtime": 1790501203.1006033,
+    "seen": 1790501555.4984162,
+    "ast_hash": "dc2a874546e473d6fa615f78b93956b3",
     "semantic_hash": ""
   },
   "docs/03_review_logs/gate2_review.md": {
-    "mtime": 1790498568.7227213,
-    "seen": 1790498619.5882,
-    "ast_hash": "68e24d241bfd8c1eca907f5d181d7501",
+    "mtime": 1790501509.0973043,
+    "seen": 1790501555.4984162,
+    "ast_hash": "adb0cb9ed2d2c43b6f3d8f1d9e709167",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/gate3_qa_report.md": {
-    "mtime": 1790498594.3197575,
-    "seen": 1790498619.5882,
-    "ast_hash": "db96a609b9d54f3658243da2dcf557a9",
+    "mtime": 1790501519.8498797,
+    "seen": 1790501555.4984162,
+    "ast_hash": "1b00a852d96036bebc03181901146335",
     "semantic_hash": ""
   },
   "index.html": {
@@ -108,9 +108,9 @@
     "semantic_hash": ""
   },
   "light.html": {
-    "mtime": 1790498546.0746524,
-    "seen": 1790498619.5882,
-    "ast_hash": "92c35adc23144c11b5c219279355c8db",
+    "mtime": 1790501435.3438368,
+    "seen": 1790501555.4984162,
+    "ast_hash": "8b38d6c8ceef044f7e305f5e5156c9f0",
     "semantic_hash": ""
   },
   "wiki/index.md": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "wiki/landscape_ai_vision_upgrade.md": {
-    "mtime": 1790498612.9667099,
-    "seen": 1790498619.5882,
-    "ast_hash": "8034b784ca7929aabf8dad63933f5588",
+    "mtime": 1790501539.8526988,
+    "seen": 1790501555.4984162,
+    "ast_hash": "29aff563f4966f59477d0310ff47b032",
     "semantic_hash": ""
   },
   "wiki/perspective_warp_calibration.md": {
@@ -132,8 +132,8 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/01_index_landscape_menu.png": {
-    "mtime": 1790498581.8628845,
-    "seen": 1790498619.5882,
+    "mtime": 1790501489.8475475,
+    "seen": 1790501555.4984162,
     "ast_hash": "d6dcbb79f3ae708cce699a0719c8b246",
     "semantic_hash": ""
   },
@@ -144,9 +144,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_light_normal_feed.png": {
-    "mtime": 1790498583.0564225,
-    "seen": 1790498619.5882,
-    "ast_hash": "830bf360f96fde5e2a2d897f22366d37",
+    "mtime": 1790501491.0892959,
+    "seen": 1790501555.4984162,
+    "ast_hash": "d252dfaf7d3087b81a51ca1462ec4bb8",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/02_warp_point_dragged.png": {
@@ -156,9 +156,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_light_defect_alarm.png": {
-    "mtime": 1790498583.1422348,
-    "seen": 1790498619.5882,
-    "ast_hash": "204f6e15b3a429153427064103c572b8",
+    "mtime": 1790501491.3406925,
+    "seen": 1790501555.4984162,
+    "ast_hash": "94c898e98956f12ef8127722c96f56f8",
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/03_tilt_defect_alarm.png": {
@@ -168,9 +168,9 @@
     "semantic_hash": ""
   },
   "docs/04_qa_evidence/04_color_defect_alarm.png": {
-    "mtime": 1790498584.6568215,
-    "seen": 1790498619.5882,
-    "ast_hash": "d1a8d6b26f478f8a9d4ba4f7f48c8713",
+    "mtime": 1790501493.0078788,
+    "seen": 1790501555.4984162,
+    "ast_hash": "6f991ec73b9d70a390c8e207cc810d21",
     "semantic_hash": ""
   }
 }

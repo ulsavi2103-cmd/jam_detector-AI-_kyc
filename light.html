@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
   <title>컨베이어 AI 자세/전도 검사기 (밝기 모드)</title>
+  <!-- ONNX Runtime Web for Mobile Real-time AI Inspection -->
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -487,8 +489,18 @@
       v.setAttribute('autoplay', '');
       v.setAttribute('muted', '');
 
+      // 1. 카메라 해상도 제한 (스마트폰 FHD/4K 과열 및 다운스케일링 연산 렉 차단: 640x480)
+      const constraints = {
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 640 },
+          height: { ideal: 480 }
+        },
+        audio: false
+      };
+
       const constraintsList = [
-        { audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } } },
+        constraints,
         { audio: false, video: { facingMode: "environment" } },
         { audio: false, video: true }
       ];
@@ -607,18 +619,126 @@
     }
 
     // =========================================================================
-    // 5. [향후 코랩 MobileNetV3 ONNX 모델 장착 슬롯: inspect_box_posture]
+    // 5. ONNX Runtime & Zero-Allocation Buffer (Mobile OOM & GC 부하 완전 차단)
     // =========================================================================
-    function inspect_box_posture(box_crop_canvas) {
+    const MODEL_PATH = 'models/box_posture_model.onnx';
+    const MODEL_INPUT_SHAPE = [1, 3, 128, 128];
+    const INPUT_SIZE = 128;
+    const INPUT_PIXELS = INPUT_SIZE * INPUT_SIZE; // 16,384
+
+    // [핵심] 전역 스코프에 1*3*128*128 크기 고정 버퍼 1개만 할당 (매 루프마다 new Float32Array 생성 금지)
+    const inputTensorBuffer = new Float32Array(1 * 3 * INPUT_SIZE * INPUT_SIZE); // 49,152 floats
+
+    // 전처리 전용 단일 재사용 Canvas/Context (가비지 컬렉터 부하 방지)
+    const prepCanvas = document.createElement('canvas');
+    prepCanvas.width = INPUT_SIZE;
+    prepCanvas.height = INPUT_SIZE;
+    const prepCtx = prepCanvas.getContext('2d', { willReadFrequently: true });
+
+    // ImageNet 정규화 상수: Mean [0.485, 0.456, 0.406], Std [0.229, 0.224, 0.225]
+    const MEAN_R = 0.485, MEAN_G = 0.456, MEAN_B = 0.406;
+    const STD_R = 0.229, STD_G = 0.224, STD_B = 0.225;
+
+    let ortSession = null;
+    let isModelLoading = false;
+
+    async function initOnnxModel() {
+      if (typeof ort === 'undefined') {
+        console.warn("[ONNX] ort library not loaded, using fallback/simulation mode.");
+        return;
+      }
+      isModelLoading = true;
+      try {
+        // 모바일 안정성을 위해 executionProviders: ['wasm'] 우선 적용
+        const options = { executionProviders: ['wasm'] };
+        try {
+          ortSession = await ort.InferenceSession.create(MODEL_PATH, options);
+          console.log("✔ [ONNX] models/box_posture_model.onnx WASM 세션 초기화 성공");
+        } catch (e1) {
+          ortSession = await ort.InferenceSession.create('box_posture_model.onnx', options);
+          console.log("✔ [ONNX] box_posture_model.onnx WASM 세션 초기화 성공");
+        }
+      } catch (err) {
+        console.warn("⚠️ [ONNX] 모델 가중치 파일 로드 대기 (시뮬레이션/더미 모드로 자동 폴백):", err.message);
+      } finally {
+        isModelLoading = false;
+      }
+    }
+    initOnnxModel();
+
+    /**
+     * ImageNet Mean/Std 정규화 및 NCHW 레이아웃 준수 In-place 업데이트 함수
+     * 함수 내부에서 new Float32Array()를 생성하지 않고 기존 inputTensorBuffer를 덮어씀 (Zero-Allocation)
+     */
+    function preprocessCropToBuffer(sourceCanvasOrVideo, cropX, cropY, cropW, cropH) {
+      prepCtx.drawImage(sourceCanvasOrVideo, cropX, cropY, cropW, cropH, 0, 0, INPUT_SIZE, INPUT_SIZE);
+      const imgData = prepCtx.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE);
+      const data = imgData.data; // RGBA uint8 (128*128*4)
+
+      const offsetG = INPUT_PIXELS;
+      const offsetB = INPUT_PIXELS * 2;
+
+      // NCHW 레이아웃: R 채널(0..16383), G 채널(16384..32767), B 채널(32768..49151)
+      for (let i = 0; i < INPUT_PIXELS; i++) {
+        const px = i * 4;
+        const r = data[px] / 255.0;
+        const g = data[px + 1] / 255.0;
+        const b = data[px + 2] / 255.0;
+
+        // ImageNet 공식: (val - mean) / std
+        inputTensorBuffer[i] = (r - MEAN_R) / STD_R;
+        inputTensorBuffer[offsetG + i] = (g - MEAN_G) / STD_G;
+        inputTensorBuffer[offsetB + i] = (b - MEAN_B) / STD_B;
+      }
+      return inputTensorBuffer;
+    }
+
+    /**
+     * MobileNetV3 ONNX 모델 추론 & 폴백 인터페이스: inspect_box_posture
+     * 클래스 인덱스 매핑: 0: defect, 1: normal
+     */
+    async function inspect_box_posture(sourceCanvasOrVideo, cropX, cropY, cropW, cropH) {
       if (window.testDefectTrigger) {
         window.testDefectTrigger = false;
         return { is_defect: true, label: "TOPPLED (가로 누움 불량)", confidence: 0.98 };
       }
 
       if (isSimMode) {
-        const currentBox = simBoxes.find(b => b.x + b.w > roi.x && b.x < roi.x + roi.w);
+        const currentBox = simBoxes.find(b => b.x + b.w > cropX && b.x < cropX + cropW);
         if (currentBox && currentBox.toppled) {
           return { is_defect: true, label: "TOPPLED (가로 누움 불량)", confidence: 0.96 };
+        }
+      }
+
+      if (ortSession) {
+        try {
+          preprocessCropToBuffer(sourceCanvasOrVideo, cropX, cropY, cropW, cropH);
+          const inputTensor = new ort.Tensor('float32', inputTensorBuffer, MODEL_INPUT_SHAPE);
+          const feeds = {};
+          feeds[ortSession.inputNames[0]] = inputTensor;
+          const results = await ortSession.run(feeds);
+          const output = results[ortSession.outputNames[0]];
+          const outData = output.data;
+
+          const scoreDefect = outData[0];
+          const scoreNormal = outData[1];
+
+          // Softmax 정규화
+          const maxVal = Math.max(scoreDefect, scoreNormal);
+          const exp0 = Math.exp(scoreDefect - maxVal);
+          const exp1 = Math.exp(scoreNormal - maxVal);
+          const probDefect = exp0 / (exp0 + exp1);
+          const probNormal = exp1 / (exp0 + exp1);
+
+          // 클래스 인덱스 매핑: 0: defect, 1: normal
+          const isDefect = probDefect > probNormal;
+          return {
+            is_defect: isDefect,
+            label: isDefect ? "DEFECT (자세 불량)" : "NORMAL (정상 직립)",
+            confidence: isDefect ? probDefect : probNormal
+          };
+        } catch (err) {
+          console.warn("[ONNX] 추론 실행 오류 (폴백 모드 전환):", err);
         }
       }
 
@@ -719,6 +839,21 @@
       return sum / (data.length / 4);
     }
 
+    // 3. 고속 통과(0.6초 주기) 및 디바운스 파라미터 (유효 체류 200~300ms 최적화)
+    const CHECK_INTERVAL = 100; // 추론 호출 주기 (100ms)
+    const COOLDOWN_TIME = 400;  // 판정 쿨다운 (400ms)
+
+    window.inputTensorBuffer = inputTensorBuffer;
+    window.CHECK_INTERVAL = CHECK_INTERVAL;
+    window.COOLDOWN_TIME = COOLDOWN_TIME;
+    window.preprocessCropToBuffer = preprocessCropToBuffer;
+    window.inspect_box_posture = inspect_box_posture;
+
+    let lastCheckTime = 0;
+    let lastJudgmentTime = 0;
+    let isCooldown = false;
+    let isInferring = false;
+
     let lastLoopTime = performance.now();
 
     function renderLoop(now) {
@@ -745,38 +880,56 @@
       octx.font = "bold 11px sans-serif";
       octx.fillText("▶ AI 통과선 [좌➔우]", roi.x + 4, roi.y + 16);
 
+      // 쿨다운 상태 자동 해제 검사 (400ms 경과 시)
+      if (isCooldown && (now - lastJudgmentTime >= COOLDOWN_TIME)) {
+        isCooldown = false;
+      }
+
       if (isRunning) {
-        let presentNow = false;
-        if (isSimMode) {
-          presentNow = simBoxes.some(b => b.x + b.w > roi.x && b.x < roi.x + roi.w);
-        } else {
-          const curLuma = getRoiLuma();
-          presentNow = Math.abs(curLuma - baselineLuma) >= sensitivity;
-        }
+        // 100ms 주기 추론 호출 (CHECK_INTERVAL)
+        if (now - lastCheckTime >= CHECK_INTERVAL) {
+          lastCheckTime = now;
 
-        if (presentNow) {
-          boxPresentTime += dt;
-          if (!isBoxPresent) {
-            // [좌측에서 ROI 진입 순간! ➔ 0.05초 즉시 크롭 및 AI 판독]
+          let presentNow = false;
+          if (isSimMode) {
+            presentNow = simBoxes.some(b => b.x + b.w > roi.x && b.x < roi.x + roi.w);
+          } else {
+            const curLuma = getRoiLuma();
+            presentNow = Math.abs(curLuma - baselineLuma) >= sensitivity;
+          }
+
+          if (presentNow) {
+            boxPresentTime += (CHECK_INTERVAL / 1000);
             isBoxPresent = true;
-            cropCanvas.width = roi.w;
-            cropCanvas.height = roi.h;
-            cropCtx.drawImage(isSimMode ? simCanvas : v, roi.x, roi.y, roi.w, roi.h, 0, 0, roi.w, roi.h);
 
-            const result = inspect_box_posture(cropCanvas);
-            if (result.is_defect) {
-              triggerDefectAlarm(result.label, result.confidence);
-            } else {
-              addLog("NORMAL (정상 직립)", false, result.confidence);
+            // 쿨다운 중이 아니고 현재 비동기 추론 중이 아닐 때만 1회 판정 수행 (동일 제품 중복 카운트 방지)
+            if (!isCooldown && !isInferring) {
+              isInferring = true;
+              isCooldown = true;
+              lastJudgmentTime = now;
+
+              const src = isSimMode ? simCanvas : v;
+              inspect_box_posture(src, roi.x, roi.y, roi.w, roi.h).then(result => {
+                isInferring = false;
+                if (result.is_defect) {
+                  triggerDefectAlarm(result.label, result.confidence);
+                } else {
+                  addLog(result.label, false, result.confidence);
+                }
+              }).catch(err => {
+                isInferring = false;
+                console.error("Inference error:", err);
+              });
             }
-          }
 
-          if (boxPresentTime >= 2.0 && banner.style.display !== 'flex') {
-            triggerJamAlarm();
+            // 라인 정체(Jam) 감지 (2초 이상 통과 구역 멈춤 시)
+            if (boxPresentTime >= 2.0 && banner.style.display !== 'flex') {
+              triggerJamAlarm();
+            }
+          } else {
+            isBoxPresent = false;
+            boxPresentTime = 0;
           }
-        } else {
-          isBoxPresent = false;
-          boxPresentTime = 0;
         }
       }
 
@@ -803,11 +956,14 @@
         banner.style.display = 'none';
         isBoxPresent = false;
         boxPresentTime = 0;
+        isCooldown = false;
+        isInferring = false;
       }
     };
 
     function injectDefect() {
       window.testDefectTrigger = true;
+      isCooldown = false; // 테스트 모의 주입 시 쿨다운 즉시 해제
       btnInjectDefect.style.background = "#ff3b30";
       setTimeout(() => btnInjectDefect.style.background = "#ff9500", 600);
       if (isSimMode) {

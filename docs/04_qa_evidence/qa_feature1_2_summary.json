@@ -1,7 +1,22 @@
 {
   "index_check": true,
   "light_normal": true,
+  "light_pipeline_spec": true,
   "light_defect_alarm": true,
+  "color_normal": true,
+  "color_pipeline_spec": true,
   "color_defect_alarm": true,
+  "static_code_checks": {
+    "light_res_640x480": true,
+    "color_res_640x480": true,
+    "light_zero_alloc": true,
+    "color_zero_alloc": true,
+    "light_debounce_100_400": true,
+    "color_debounce_100_400": true,
+    "light_onnx_model": true,
+    "color_onnx_model": true,
+    "light_class_mapping": true,
+    "color_class_mapping": true
+  },
   "console_errors": []
 }

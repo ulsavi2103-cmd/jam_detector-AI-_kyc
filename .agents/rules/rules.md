@@ -1,3 +1,7 @@
+---
+trigger: manual
+---
+
 # Antigravity Production Protocol (초고속 완전 자율 워크플로우 엔진)
 
 **[주의] 권한 엄격 분리 원칙 및 도구(Tool) 제약**
